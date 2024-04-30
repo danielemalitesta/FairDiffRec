@@ -124,7 +124,7 @@ cd $HOME/workspace/FairDiffRec/DiffRec
                 print(header.format(offset_stop - offset), file=f)
                 current_command_lines = sorted_command_lines[offset: offset_stop]
                 for job_id, command_line in enumerate(current_command_lines, 1):
-                    print(f'{command_line}', file=f)
+                    print(f'test $SLURM_ARRAY_TASK_ID -eq {job_id} && sleep 10 && {command_line}', file=f)
 
 
 if __name__ == '__main__':
