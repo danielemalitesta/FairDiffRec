@@ -67,7 +67,7 @@ def main():
                 completed = 'End. Best Epoch' in content
 
         if not completed:
-            command_line = f'python main.py {to_cmd(hyperparam)} --dataset: {args.dataset} --data_path: {args.data_path}, > {logs_path}/{args.dataset}/{logfile} 2>&1'
+            command_line = f'python main.py {to_cmd(hyperparam)} --dataset: {args.dataset} --data_path: {args.data_path} > {logs_path}/{args.dataset}/{logfile} 2>&1'
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates
