@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='ml-1m', help='choose the dataset')
 parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
 parser.add_argument('--batch_size_jobs', type=int, default=5, help='batch size for jobs')
-parser.add_argument('--cluster', type=str, default='margaret', help='cluster name')
+parser.add_argument('--cluster', type=str, default='mesocentre', help='cluster name')
 
 args = parser.parse_args()
 
