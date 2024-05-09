@@ -67,6 +67,8 @@ def main():
 
     command_lines = set()
 
+    print(f'Total configurations: {len(hyperparams)}')
+
     for hyperparam in hyperparams:
         start = hyperparam['--noise_scale'] * hyperparam['--noise_min']
         end = hyperparam['--noise_scale'] * hyperparam['--noise_max']
@@ -90,6 +92,8 @@ def main():
 
     # Sort command lines and remove duplicates
     sorted_command_lines = sorted(command_lines)
+
+    print(f'Admissible configurations: {len(sorted_command_lines)}')
 
     import random
     rng = random.Random(0)
