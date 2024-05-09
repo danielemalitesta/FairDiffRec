@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='ml-1m', help='choose the dataset')
 parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
 parser.add_argument('--batch_size_jobs', type=int, default=5, help='batch size for jobs')
+parser.add_argument('--partition', type=str, default='gpu', help='partition name')
 parser.add_argument('--cluster', type=str, default='mesocentre', help='cluster name')
 
 args = parser.parse_args()
@@ -111,7 +112,7 @@ def main():
 
 #SBATCH --output=/workdir/%u/slogs/diffrec-%A_%a.out
 #SBATCH --error=/workdir/%u/slogs/diffrec-%A_%a.err
-#SBATCH --partition=gpu
+#SBATCH --partition={1}
 #SBATCH --job-name=diffrec
 #SBATCH --gres=gpu:1
 #SBATCH --mem=20GB # memory in Mb
@@ -144,7 +145,7 @@ cd $HOME/workspace/FairDiffRec/DiffRec
         for index, offset in enumerate(range(0, nb_jobs, args.batch_size_jobs), 1):
             offset_stop = min(offset + args.batch_size_jobs, nb_jobs)
             with open(scripts_path + f'/{args.dataset}/' + date_time + f'__{index}.sh', 'w') as f:
-                print(header.format(offset_stop - offset), file=f)
+                print(header.format(offset_stop - offset, args.partition), file=f)
                 current_command_lines = sorted_command_lines[offset: offset_stop]
                 for job_id, command_line in enumerate(current_command_lines, 1):
                     print(f'test $SLURM_ARRAY_TASK_ID -eq {job_id} && sleep 10 && {command_line}', file=f)
