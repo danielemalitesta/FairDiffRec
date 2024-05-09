@@ -71,11 +71,11 @@ def main():
         start = hyperparam['--noise_scale'] * hyperparam['--noise_min']
         end = hyperparam['--noise_scale'] * hyperparam['--noise_max']
         betas = betas_from_linear_variance(hyperparam['--steps'], np.linspace(start, end, hyperparam['--steps'], dtype=np.float64))
-        if len(betas.shape) == 1:
+        if not (len(betas.shape) == 1):
             continue
-        if len(betas) == hyperparam['--steps']:
+        if not (len(betas) == hyperparam['--steps']):
             continue
-        if (betas > 0).all() and (betas <= 1).all():
+        if not ((betas > 0).all() and (betas <= 1).all()):
             continue
         logfile = to_logfile(hyperparam)
         completed = False
