@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os.path
+import numpy as np
 import datetime
 
 import argparse
@@ -14,6 +15,14 @@ parser.add_argument('--batch_size_jobs', type=int, default=5, help='batch size f
 parser.add_argument('--cluster', type=str, default='mesocentre', help='cluster name')
 
 args = parser.parse_args()
+
+def betas_from_linear_variance(steps, variance, max_beta=0.999):
+    alpha_bar = 1 - variance
+    betas = []
+    betas.append(1 - alpha_bar[0])
+    for i in range(1, steps):
+        betas.append(min(1 - alpha_bar[i] / alpha_bar[i - 1], max_beta))
+    return np.array(betas)
 
 hyperparams = ParameterGrid({
     "--lr": [1e-5, 1e-4, 1e-3, 1e-2],
@@ -59,6 +68,15 @@ def main():
     command_lines = set()
 
     for hyperparam in hyperparams:
+        start = hyperparam['--noise_scale'] * hyperparam['--noise_min']
+        end = hyperparam['--noise_scale'] * hyperparam['--noise_max']
+        betas = betas_from_linear_variance(hyperparam['--steps'], np.linspace(start, end, hyperparam['--steps'], dtype=np.float64))
+        if len(betas.shape) == 1:
+            continue
+        if len(betas) == hyperparam['--steps']:
+            continue
+        if (betas > 0).all() and (betas <= 1).all():
+            continue
         logfile = to_logfile(hyperparam)
         completed = False
         if os.path.isfile(f'{logs_path}/{args.dataset}/{logfile}'):
