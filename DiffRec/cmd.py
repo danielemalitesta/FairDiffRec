@@ -37,7 +37,7 @@ def summary(configuration):
 
 
 def to_cmd(c):
-    command = ' '.join([f'{k} {v}' for k, v in c.items()])
+    command = ' '.join([f'{k}={v}' for k, v in c.items()])
     return command
 
 
@@ -67,7 +67,7 @@ def main():
                 completed = 'End. Best Epoch' in content
 
         if not completed:
-            command_line = f'python main.py {to_cmd(hyperparam)} --dataset: {args.dataset} --data_path: {args.data_path} > {logs_path}/{args.dataset}/{logfile} 2>&1'
+            command_line = f'$HOME/.conda/envs/diffrec/bin/python main.py {to_cmd(hyperparam)} --dataset={args.dataset} --data_path={args.data_path} > {logs_path}/{args.dataset}/{logfile} 2>&1'
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates
@@ -94,7 +94,7 @@ def main():
 #SBATCH --mem=20GB # memory in Mb
 #SBATCH --cpus-per-task=4 # number of cpus to use - there are 32 on each node.
 #SBATCH --time=4:00:00 # time requested in days-hours:minutes:seconds
-#SBATCH --array=1-{0}%100
+#SBATCH --array=1-{0}
 
 echo "Setting up bash environment"
 source ~/.bashrc
