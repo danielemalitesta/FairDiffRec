@@ -194,7 +194,7 @@ for epoch in range(1, args.epochs + 1):
 
 print('===' * 18)
 print("End. Best Epoch {:03d} ".format(best_epoch))
-evaluate_utils.print_results(None, best_results, best_test_results)
+print(evaluate_utils.print_results(None, best_results, best_test_results))
 print("End time: ", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
 
