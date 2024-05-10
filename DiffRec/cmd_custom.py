@@ -12,6 +12,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='ml-1m', help='choose the dataset')
 parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
 parser.add_argument('--batch_size_jobs', type=int, default=5, help='batch size for jobs')
+parser.add_argument('--start', type=int, default=0, help='starting job')
+parser.add_argument('--end', type=int, default=200, help='ending job')
 parser.add_argument('--partition', type=str, default='gpu', help='partition name')
 parser.add_argument('--cluster', type=str, default='mesocentre', help='cluster name')
 
@@ -99,6 +101,8 @@ def main():
     import random
     rng = random.Random(0)
     rng.shuffle(sorted_command_lines)
+
+    sorted_command_lines = sorted_command_lines[args.start:args.end]
 
     nb_jobs = len(sorted_command_lines)
 
