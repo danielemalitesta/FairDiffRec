@@ -104,6 +104,8 @@ def main():
 
     sorted_command_lines = sorted_command_lines[args.start:args.end]
 
+    print(f'Actual configurations: {len(sorted_command_lines)}')
+
     nb_jobs = len(sorted_command_lines)
 
     if args.batch_size_jobs == -1:
