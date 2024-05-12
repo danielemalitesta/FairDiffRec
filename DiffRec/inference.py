@@ -90,7 +90,7 @@ elif args.dataset == 'ml-1m_noisy':
     args.noise_min = 0.001
     args.noise_max = 0.01
 elif args.dataset == 'ml-1m':
-    args.batch_size = '400'
+    args.batch_size = 400
     args.dims = '[200,600]'
     args.emb_size = 10
     args.lr = 0.0001
