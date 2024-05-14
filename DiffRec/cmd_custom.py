@@ -90,7 +90,7 @@ def main():
                 completed = 'End. Best Epoch' in content
 
         if not completed:
-            command_line = f'$HOME/.conda/envs/diffrec/bin/python main_cluster.py {to_cmd(hyperparam)} --dataset={args.dataset} --data_path={args.data_path}/{args.dataset}/ > {logs_path}/{args.dataset}/{logfile} 2>&1'
+            command_line = f'$HOME/.conda/envs/diffrec/bin/python main_cluster.py {to_cmd(hyperparam)} --cuda --dataset={args.dataset} --data_path={args.data_path}/{args.dataset}/ > {logs_path}/{args.dataset}/{logfile} 2>&1'
             command_lines |= {command_line}
 
     # Sort command lines and remove duplicates
