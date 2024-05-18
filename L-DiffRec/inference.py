@@ -206,7 +206,7 @@ def evaluate(data_loader, data_te, mask_his, topN):
 
             prediction[his_data.nonzero()] = -np.inf  # mask ui pairs in train & validation set
 
-            _, mapped_indices = torch.topk(prediction, topN[-1])  # topk category idx
+            values, mapped_indices = torch.topk(prediction, topN[-1])  # topk category idx
 
             if args.n_cate > 1:
                 indices = category_map[mapped_indices]
