@@ -95,7 +95,7 @@ elif args.dataset == 'ml-1m_noisy':
     args.noise_scale = 0.005
     args.noise_min = 0.005
     args.noise_max = 0.02
-elif args.dataset == 'foursquare_tky'
+elif args.dataset == 'foursquare_tky':
     args.batch_size=400 
     args.emb_size=10 
     args.in_dims='[300]'
