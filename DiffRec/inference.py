@@ -188,9 +188,8 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
     for i in range(e_N):
         target_items.append(data_te[i, :].nonzero()[1].tolist())
 
-    tot_users = 0
-
     if write:
+        tot_users = 0
         with open(f'{model_path}{model_name.replace("pth", "tsv")}', 'a') as f:
             with torch.no_grad():
                 for batch_idx, batch in enumerate(data_loader):
