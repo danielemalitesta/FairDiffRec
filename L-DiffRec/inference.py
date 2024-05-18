@@ -215,6 +215,11 @@ def evaluate(data_loader, data_te, mask_his, topN):
 
             indices = indices.cpu().numpy().tolist()
             predict_items.extend(indices)
+            for user in range(batch.shape[0]):
+                current_values = values[user]
+                for idx, item in enumerate(indices[user]):
+                    f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
+                tot_users += 1
 
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
 
