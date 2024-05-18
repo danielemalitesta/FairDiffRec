@@ -179,7 +179,7 @@ elif args.dataset == 'foursquare_tky':
 model = torch.load(model_path + model_name).to(device)
 Autoencoder = torch.load(model_path + AE_name).to(device)
 
-def evaluate(data_loader, data_te, mask_his, topN):
+def evaluate(data_loader, data_te, mask_his, topN, write=False):
     model.eval()
     Autoencoder.eval()
     e_idxlist = list(range(mask_his.shape[0]))
@@ -192,34 +192,35 @@ def evaluate(data_loader, data_te, mask_his, topN):
     
     if args.n_cate > 1:
         category_map = Autoencoder.category_map.to(device)
+
+    with open(f'{model_path}{model_name.replace("pth", "tsv")}', 'a') as f:
+        with torch.no_grad():
+            for batch_idx, batch in enumerate(data_loader):
+                batch = batch.to(device)
     
-    with torch.no_grad():
-        for batch_idx, batch in enumerate(data_loader):
-            batch = batch.to(device)
-
-            # mask map
-            his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
-
-            _, batch_latent, _ = Autoencoder.Encode(batch)
-            batch_latent_recon = diffusion.p_sample(model, batch_latent, args.sampling_steps, args.sampling_noise)
-            prediction = Autoencoder.Decode(batch_latent_recon)  # [batch_size, n1_items + n2_items + n3_items]
-
-            prediction[his_data.nonzero()] = -np.inf  # mask ui pairs in train & validation set
-
-            values, mapped_indices = torch.topk(prediction, topN[-1])  # topk category idx
-
-            if args.n_cate > 1:
-                indices = category_map[mapped_indices]
-            else:
-                indices = mapped_indices
-
-            indices = indices.cpu().numpy().tolist()
-            predict_items.extend(indices)
-            for user in range(batch.shape[0]):
-                current_values = values[user]
-                for idx, item in enumerate(indices[user]):
-                    f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
-                tot_users += 1
+                # mask map
+                his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
+    
+                _, batch_latent, _ = Autoencoder.Encode(batch)
+                batch_latent_recon = diffusion.p_sample(model, batch_latent, args.sampling_steps, args.sampling_noise)
+                prediction = Autoencoder.Decode(batch_latent_recon)  # [batch_size, n1_items + n2_items + n3_items]
+    
+                prediction[his_data.nonzero()] = -np.inf  # mask ui pairs in train & validation set
+    
+                values, mapped_indices = torch.topk(prediction, topN[-1])  # topk category idx
+    
+                if args.n_cate > 1:
+                    indices = category_map[mapped_indices]
+                else:
+                    indices = mapped_indices
+    
+                indices = indices.cpu().numpy().tolist()
+                predict_items.extend(indices)
+                for user in range(batch.shape[0]):
+                    current_values = values[user]
+                    for idx, item in enumerate(indices[user]):
+                        f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
+                    tot_users += 1
 
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
 
@@ -252,7 +253,7 @@ valid_results = evaluate(test_loader, valid_y_data, mask_train, eval(args.topN))
 if args.tst_w_val:
     test_results = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
 else:
-    test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN))
+    test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True)
 evaluate_utils.print_results(None, valid_results, test_results)
 
 
