@@ -178,7 +178,7 @@ model = torch.load(model_path + model_name).to(device)
 
 print("models ready.")
 
-def evaluate(data_loader, data_te, mask_his, topN):
+def evaluate(data_loader, data_te, mask_his, topN, write=False):
     model.eval()
     e_idxlist = list(range(mask_his.shape[0]))
     e_N = mask_his.shape[0]
@@ -190,7 +190,24 @@ def evaluate(data_loader, data_te, mask_his, topN):
 
     tot_users = 0
 
-    with open(f'{model_path}{model_name.replace("pth", "tsv")}', 'a') as f:
+    if write:
+        with open(f'{model_path}{model_name.replace("pth", "tsv")}', 'a') as f:
+            with torch.no_grad():
+                for batch_idx, batch in enumerate(data_loader):
+                    his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
+                    batch = batch.to(device)
+                    prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
+                    prediction[his_data.nonzero()] = -np.inf
+    
+                    values, indices = torch.topk(prediction, topN[-1])
+                    indices = indices.cpu().numpy().tolist()
+                    predict_items.extend(indices)
+                    for user in range(batch.shape[0]):
+                        current_values = values[user]
+                        for idx, item in enumerate(indices[user]):
+                            f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
+                        tot_users += 1
+    else:
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
                 his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
@@ -198,14 +215,9 @@ def evaluate(data_loader, data_te, mask_his, topN):
                 prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
                 prediction[his_data.nonzero()] = -np.inf
 
-                values, indices = torch.topk(prediction, topN[-1])
+                _, indices = torch.topk(prediction, topN[-1])
                 indices = indices.cpu().numpy().tolist()
                 predict_items.extend(indices)
-                for user in range(batch.shape[0]):
-                    current_values = values[user]
-                    for idx, item in enumerate(indices[user]):
-                        f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
-                    tot_users += 1
 
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
 
@@ -215,7 +227,7 @@ valid_results = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
 if args.tst_w_val:
     test_results = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
 else:
-    test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN))
+    test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True)
 evaluate_utils.print_results(None, valid_results, test_results)
 
 
