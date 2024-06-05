@@ -33,7 +33,7 @@ First, download the **clean** versions of Movielens-1M, Yelp, and Amazon Book da
 - Yelp: https://github.com/YiyanXu/DiffRec/blob/main/datasets/yelp_clean.rar
 - Amazon Book: https://github.com/YiyanXu/DiffRec/blob/main/datasets/amazon-book_clean.rar
 
-Then, put and decompress them in the ./datasets/ folder. Only for the Amazon Book dataset and L-DiffRec, you will need to download the additional item embeddings available at this [link](https://onedrive.live.com/?redeem=aHR0cHM6Ly8xZHJ2Lm1zL3UvYy8xZmZmYjhhNWRiNGM5MTMzL0VlM0s0VExTRklWQmtPZGJ5LU5VRDNVQnA3VW5ReHhoM3JIdlk2cXVFN1g3S0E%5FZT14Z2IwSzM&id=1FFFB8A5DB4C9133%21s32e1caed14d2418590e75bcbe3540f75&cid=1FFFB8A5DB4C9133) (publicly provided by the authors): 
+Then, put and decompress them in the ./datasets/ folder. Only for the Amazon Book dataset and L-DiffRec, you will need to download the additional item embeddings available at this [link](https://onedrive.live.com/?redeem=aHR0cHM6Ly8xZHJ2Lm1zL3UvYy8xZmZmYjhhNWRiNGM5MTMzL0VlM0s0VExTRklWQmtPZGJ5LU5VRDNVQnA3VW5ReHhoM3JIdlk2cXVFN1g3S0E%5FZT14Z2IwSzM&id=1FFFB8A5DB4C9133%21s32e1caed14d2418590e75bcbe3540f75&cid=1FFFB8A5DB4C9133) (publicly provided by the authors).
 
 #### Reproduce results
 
