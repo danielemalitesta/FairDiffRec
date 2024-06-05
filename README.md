@@ -1,92 +1,7 @@
-# Diffusion Recommender Model
-This is the pytorch implementation of our paper at SIGIR 2023:
-> [Diffusion Recommender Model](https://arxiv.org/abs/2304.04971)
-> 
-> Wenjie Wang, Yiyan Xu, Fuli Feng, Xinyu Lin, Xiangnan He, Tat-Seng Chua
+# Fair Diffusion Recommender Model
+This is the official implementation of the paper "_How Fair Is Your Diffusion Recommender Model? A Reproducibility and Comparative Analysis_", submitted at RecSys 2024 in the Reproducibility track.
 
-## Environment
-- Anaconda 3
-- python 3.8.10
-- pytorch 1.12.0
-- numpy 1.22.3
-
-## Usage
-### Data
-The experimental data are in './datasets' folder, including Amazon-Book, Yelp and MovieLens-1M. Note that the item embedding files of Amazon-book for clean setting and noisy setting are not here due to filesize limits, which are available at [OneDrive](https://1drv.ms/u/c/1fffb8a5db4c9133/Ee3K4TLSFIVBkOdby-NUD3UBp7UnQxxh3rHvY6quE7X7KA?e=xgb0K3). Those item embeddings used in L-DiffRec are derived from a pre-trained LightGCN specific to each dataset.
-
-Note that the results on ML-1M differ from those reported in [CODIGEM](https://dl.acm.org/doi/10.1007/978-3-031-10989-8_47), owing to different data processing procedures. CODIGEM did not sort and split the training/testing sets according to timestamps; however, temporal splitting aligns better with the real-world testing.
-
-### Training
-To reproduce the results and perform fine-tuning of the hyperparameters, please refer to the model name specified in the **inference.py** file. Ensure that the hyperparameter 'noise_min' is set to a value lower than 'noise_max'.
-#### DiffRec
-```
-cd ./DiffRec
-python main.py --cuda --dataset=$1 --data_path=../datasets/$1/ --lr=$2 --weight_decay=$3 --batch_size=$4 --dims=$5 --emb_size=$6 --mean_type=$7 --steps=$8 --noise_scale=$9 --noise_min=${10} --noise_max=${11} --sampling_steps=${12} --reweight=${13} --log_name=${14} --round=${15} --gpu=${16}
-```
-or use run.sh
-```
-cd ./DiffRec
-sh run.sh dataset lr weight_decay batch_size dims emb_size mean_type steps noise_scale noise_min noise_max sampling_steps reweight log_name round gpu_id
-```
- 
-#### L-DiffRec
-```
-cd ./L-DiffRec
-python main.py --cuda --dataset=$1 --data_path=../datasets/$1/ --emb_path=../datasets/ --lr1=$2 --lr2=$3 --wd1=$4 --wd2=$5 --batch_size=$6 --n_cate=$7 --in_dims=$8 --out_dims=$9 --lamda=${10} --mlp_dims=${11} --emb_size=${12} --mean_type=${13} --steps=${14} --noise_scale=${15} --noise_min=${16} --noise_max=${17} --sampling_steps=${18} --reweight=${19} --log_name=${20} --round=${21} --gpu=${22}
-```
-or use run.sh
-```
-cd ./L-DiffRec
-sh run.sh dataset lr1 lr2 wd1 wd2 batch_size n_cate in_dims out_dims lamda mlp_dims emb_size mean_type steps noise_scale noise_min noise_max sampling_steps reweight log_name round gpu_id
-```
-
-#### T-DiffRec
-```
-cd ./T-DiffRec
-python main.py --cuda --dataset=$1 --data_path=../datasets/$1/ --lr=$2 --weight_decay=$3 --batch_size=$4 --dims=$5 --emb_size=$6 --mean_type=$7 --steps=$8 --noise_scale=$9 --noise_min=${10} --noise_max=${11} --sampling_steps=${12} --reweight=${13} --w_min=${14} --w_max=${15} --log_name=${16} --round=${17} --gpu=${18}
-```
-or use run.sh
-```
-cd ./T-DiffRec
-sh run.sh dataset lr weight_decay batch_size dims emb_size mean_type steps noise_scale noise_min noise_max sampling_steps reweight w_min w_max log_name round gpu_id
-```
-
-#### LT-DiffRec
-```
-cd ./L-DiffRec
-python main.py --cuda --dataset=$1 --data_path=../datasets/$1/ --emb_path=../datasets/ --lr1=$2 --lr2=$3 --wd1=$4 --wd2=$5 --batch_size=$6 --n_cate=$7 --in_dims=$8 --out_dims=$9 --lamda=${10} --mlp_dims=${11} --emb_size=${12} --mean_type=${13} --steps=${14} --noise_scale=${15} --noise_min=${16} --noise_max=${17} --sampling_steps=${18} --reweight=${19} --w_min=${20} --w_max=${21} --log_name=${22} --round=${23} --gpu=${24}
-```
-or use run.sh
-```
-cd ./L-DiffRec
-sh run.sh dataset lr1 lr2 wd1 wd2 batch_size n_cate in_dims out_dims lamda mlp_dims emb_size mean_type steps noise_scale noise_min noise_max sampling_steps reweight w_min w_max log_name round gpu_id
-```
-
-### Inference
-
-1. Download the checkpoints released by us from [OneDrive](https://1drv.ms/u/c/1fffb8a5db4c9133/EaQQpSO6Yl9El2w9T_6Y62YBC-LcUhcynHAxMfoJm-mdZg?e=SeenBO).
-2. Put the 'checkpoints' folder into the current folder.
-3. Run inference.py
-```
-python inference.py --dataset=$1 --gpu=$2
-```
-
-### Examples
-
-1. Train DiffRec on Amazon-book under clean setting
-```
-cd ./DiffRec
-sh run.sh amazon-book_clean 5e-5 0 400 [1000] 10 x0 5 0.0001 0.0005 0.005 0 1 log 1 0
-```
-2. Inference L-DiffRec on Yelp under noisy setting
-```
-cd ./L-DiffRec
-python inference.py --dataset=yelp_noisy --gpu=0
-```
-
-## Citation  
-If you use our code, please kindly cite:
-
+The current code is heavily inspired by the code of the paper "_Diffusion Recommender Model_", accepted at SIGIR 2023:
 ```
 @inproceedings{wang2023diffrec,
 title = {Diffusion Recommender Model},
@@ -97,3 +12,90 @@ publisher = {ACM},
 year = {2023}
 }
 ```
+
+so refer to the original authors' [code](https://github.com/YiyanXu/DiffRec) for the official implementation.
+
+### Requirements
+To begin with, install the useful packages as indicated in the original code (the authors suggest using Anaconda 3):
+
+- torch
+- numPy
+- Bottleneck
+- kmeans-pytorch
+- scikit-learn
+
+### Reproducibility (RQ1)
+
+#### Datasets
+First, download the **clean** versions of Movielens-1M, Yelp, and Amazon Book datasets from the authors' public links:
+
+- Movielens-1M: https://github.com/YiyanXu/DiffRec/blob/main/datasets/ml-1m_clean.rar
+- Yelp: https://github.com/YiyanXu/DiffRec/blob/main/datasets/yelp_clean.rar
+- Amazon Book: https://github.com/YiyanXu/DiffRec/blob/main/datasets/amazon-book_clean.rar
+
+Then, put and decompress them in the ./datasets/ folder. Only for the Amazon Book dataset and L-DiffRec, you will need to download the additional item embeddings available at this [link](https://onedrive.live.com/?redeem=aHR0cHM6Ly8xZHJ2Lm1zL3UvYy8xZmZmYjhhNWRiNGM5MTMzL0VlM0s0VExTRklWQmtPZGJ5LU5VRDNVQnA3VW5ReHhoM3JIdlk2cXVFN1g3S0E%5FZT14Z2IwSzM&id=1FFFB8A5DB4C9133%21s32e1caed14d2418590e75bcbe3540f75&cid=1FFFB8A5DB4C9133) (publicly provided by the authors): 
+
+#### Reproduce results
+
+To reproduce the results in Table 1, run the training and inference scripts for both DiffRec and L-DiffRec, and all the three datasets. We followed the best hyper-parameter settings found by the authors (and reported in the inference.py files for both [DiffRec](https://github.com/YiyanXu/DiffRec/blob/main/DiffRec/inference.py) and [L-DiffRec](https://github.com/YiyanXu/DiffRec/blob/main/L-DiffRec/inference.py)).
+
+|                  | **DiffRec**                                                                                                                                                                                                                                    | **L-DiffRec**                                                                                                                                                                                                                                                                                                       |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Movielens-1M** | ```python main.py --dataset ml-1m_clean --lr 0.001 --weight_decay 0.0 --batch_size 400 --dims [200,600] --emb_size 10 --mean_type x0 --steps 40 --noise_scale 0.005 --noise_min 0.005 --noise_max 0.01 --sampling_steps 0 --reweight True```   | ```python main.py --dataset ml-1m_clean --lr1 0.001 --lr2 0.0005 --wd1 0.0 --wd2 0.0 --batch_size 400 --n_cate 2 --in_dims [300] --out_dims [] --lamda 0.03 --mlp_dims [300] --emb_size 10 --mean_type x0 --steps 40 --noise_scale 0.005 --noise_min 0.005 --noise_max 0.02 --sampling_steps 0 --reweight 1```      |
+| **Yelp**         | ```python main.py --dataset yelp_clean --lr 1e-05 --weight_decay 0.0 --batch_size 400 --dims [1000] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.01 --noise_min 0.001 --noise_max 0.01 --sampling_steps 0 --reweight 1```            | ```python main.py --dataset yelp_clean --lr1 0.0005 --lr2 0.0001 --wd1 0.0 --wd2 0.0 --batch_size 400 --n_cate 2 --in_dims [300] --out_dims [] --lamda 0.03 --mlp_dims [300] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.01 --noise_min 0.005 --noise_max 0.01 --sampling_steps 0 --reweight 0```        |
+| **Amazon Book**  | ```python main.py --dataset amazon-book_clean --lr 5e-05 --weight_decay 0.0 --batch_size 400 --dims [1000] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.0001 --noise_min 0.0005 --noise_max 0.005 --sampling_steps 0 --reweight 1``` | ```python main.py --dataset amazon-book_clean --lr1 0.0005 --lr2 0.0001 --wd1 0.0 --wd2 0.0 --batch_size 400 --n_cate 2 --in_dims [300] --out_dims [] --lamda 0.05 --mlp_dims [300] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.5 --noise_min 0.001 --noise_max 0.005 --sampling_steps 0 --reweight 1``` |
+
+This will produce the model weights file for each dataset-model combination (see in ./saved_models/).
+
+After that, run the inference.py script to check if the results are aligned with what you obtained in the training by only specifying the dataset name (the other parameters are already set in the script itself):
+```sh
+python inference.py --dataset <dataset_name>
+```
+
+### Fairness analysis (RQ2)
+
+#### Datasets
+For this RQ, you need two more recommendation datasets (Movielens-1M_A and Foursquare_TKY) which come with users' metadata to calculate fairness metrics.
+
+They are available at these links:
+
+- Movielens-1M-A: 
+- Foursquare-TKY:
+
+Once again, download the files, and put/decompress them in the ./datasets/ folder.
+
+#### Reproduce results
+
+To reproduce the results, you first need to train DiffRec and L-DiffRec by exploring the hyper-parameters through a grid search. The original authors' code does not allow, by design, to explore various hyper-parameters settings and choose the best one according to the results on the validation set. Thus, we provide a possible implementation to create the whole grid search exploration, train the models, and eventually select the best configuration on the validation set.
+
+First, generate the bash script that will run (sequentially) all configurations. You may accelerate the training process in different manners (e.g., parallelizing the scripts):
+
+```sh
+python generate_grid_search.py --dataset <dataset_name>
+```
+
+Where you need to specify the dataset name. Note that you should run this for both DiffRec and L-DiffRec, as the two exploration spaces differ. Also note that this script randomly selects 200 and 500 explorations (for DiffRec and L-DiffRec) to run from the total explorations. As stated in the paper, and for the sake of time, we decided not to explore the whole search space, since it would have been too large and computationally expensive. We believe this might represent a sufficient approximation of the optimal results. Finally, we also put a check on the generated configurations (following the original authors' code) since some of them may not be admissable.
+
+This will generate the bash file train_all_<dataset-name>.sh. Run it through:
+
+```sh
+./train_all_<dataset_name>.sh
+```
+
+Once the training is done, you will see the model weights files at ./saved_models/<dataset_name> and the log files at the path ./logs/<dataset-name>/. To find the best configuration according to the Recall@20 on the validation set, run the bash script:
+
+```sh
+./get_best_val.sh <dataset_name>
+```
+that sorts all log names according to the Recall@20 on the validation set. Again, you'll need to run this for both DiffRec and L-DiffRec.
+
+For your convenience, here, we report the best hyper-parameters for DiffRec and L-DiffRec on Movielens-1M_A and Foursquare_TKY as we found them:
+
+|                    | **DiffRec**                                                                                                                                                                                                             | **L-DiffRec**                                                                                                                                                                                                                                                                                        |
+|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Movielens-1M-A** | batch_size=400<br/>dims=[200,600]<br/>emb_size=10<br/>lr=0.0001<br/>mean_type=x0<br/>noise_max=0.01<br/>noise_min=0.0005<br/>noise_scale=0.005<br/>reweight=False<br/>sampling_steps=0<br/>steps=5<br/>weight_decay=0.0 | batch_size=400<br/>emb_size=10<br/>in_dims=[300]<br/>lamda=0.01<br/>lr1=0.001<br/>lr2=0.001<br/>mean_type=x0<br/>mlp_dims=[300]<br/>n_cate=2<br/>noise_max=0.01<br/>noise_min=0.0005<br/>noise_scale=0.1<br/>out_dims=[]<br/>reweight=False<br/>sampling_steps=0<br/>steps=5<br/>wd1=0.0<br/>wd2=0.0 |
+| **Foursquare-TKY** | batch_size=400<br/>dims=[1000]<br/>emb_size=10<br/>lr=0.0001<br/>mean_type=x0<br/>noise_max=0.01<br/>noise_min=0.001<br/>noise_scale=0.005<br/>reweight=False<br/>sampling_steps=0<br/>steps=40<br/>weight_decay=0.0    | batch_size=400<br/>emb_size=10<br/>in_dims=[300]<br/>lamda=0.03<br/>lr1=0.001<br/>lr2=0.001<br/>mean_type=x0<br/>mlp_dims=[300]<br/>n_cate=2<br/>noise_max=0.005<br/>noise_min=0.001<br/>noise_scale=0.1<br/>out_dims=[]<br/>reweight=True<br/>sampling_steps=0<br/>steps=2<br/>wd1=0.0<br/>wd2=0.0  |
+
+Then, run the inference scripts for all settings. This will produce a tsv file (in ./saved_models/<dataset_name>/) containing the predicted recommendation lists for each user.
+
+All other recommendation baselines for RQ2 are trained with [RecBole](https://github.com/RUCAIBox/RecBole). 

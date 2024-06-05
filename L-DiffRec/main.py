@@ -98,9 +98,9 @@ device = torch.device("cuda:0" if args.cuda else "cpu")
 print("Starting time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 
 ### DATA LOAD ###
-train_path = args.data_path + 'train_list.npy'
-valid_path = args.data_path + 'valid_list.npy'
-test_path = args.data_path + 'test_list.npy'
+train_path = args.data_path + args.dataset + 'train_list.npy'
+valid_path = args.data_path + args.dataset + 'valid_list.npy'
+test_path = args.data_path + args.dataset + 'test_list.npy'
 
 train_data, valid_y_data, test_y_data, n_user, n_item = data_utils.data_load(train_path, valid_path, test_path)
 train_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A))

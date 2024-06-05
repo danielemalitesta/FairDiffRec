@@ -38,7 +38,7 @@ def seed_worker(worker_id):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='ml-1m_clean', help='choose the dataset')
-parser.add_argument('--data_path', type=str, default='./datasets/', help='load data path')
+parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--weight_decay', type=float, default=0.0)
 parser.add_argument('--batch_size', type=int, default=400)
@@ -48,7 +48,6 @@ parser.add_argument('--tst_w_val', action='store_true', help='test with validati
 parser.add_argument('--cuda', action='store_true', help='use CUDA')
 parser.add_argument('--gpu', type=str, default='0', help='gpu card ID')
 parser.add_argument('--save_path', type=str, default='./saved_models/', help='save model path')
-parser.add_argument('--save_logs', type=str, default='./saved_logs/', help='save model path')
 parser.add_argument('--log_name', type=str, default='log', help='the log name')
 parser.add_argument('--round', type=int, default=1, help='record the experiment')
 
@@ -78,9 +77,9 @@ device = torch.device("cuda:0" if args.cuda else "cpu")
 print("Starting time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 
 ### DATA LOAD ###
-train_path = args.data_path + 'train_list.npy'
-valid_path = args.data_path + 'valid_list.npy'
-test_path = args.data_path + 'test_list.npy'
+train_path = args.data_path + args.dataset + 'train_list.npy'
+valid_path = args.data_path + args.dataset + 'valid_list.npy'
+test_path = args.data_path + args.dataset + 'test_list.npy'
 
 train_data, valid_y_data, test_y_data, n_user, n_item = data_utils.data_load(train_path, valid_path, test_path)
 train_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A))
@@ -188,23 +187,15 @@ for epoch in range(1, args.epochs + 1):
             torch.save(model, '{}{}_lr{}_wd{}_bs{}_dims{}_emb{}_{}_steps{}_scale{}_min{}_max{}_sample{}_reweight{}_{}.pth' \
                 .format(args.save_path, args.dataset, args.lr, args.weight_decay, args.batch_size, args.dims, args.emb_size, args.mean_type, \
                 args.steps, args.noise_scale, args.noise_min, args.noise_max, args.sampling_steps, args.reweight, args.log_name))
-    
+
     print("Runing Epoch {:03d} ".format(epoch) + 'train loss {:.4f}'.format(total_loss) + " costs " + time.strftime(
-                        "%H: %M: %S", time.gmtime(time.time()-start_time)))
-    print('---'*18)
+        "%H: %M: %S", time.gmtime(time.time() - start_time)))
+    print('---' * 18)
 
-if not os.path.exists(args.save_logs):
-    os.makedirs(args.save_logs)
-
-with open(args.save_logs + f'/{args.dataset}.log', 'a') as f:
-    print('===' * 18, file=f)
-    print('lr{}_wd{}_bs{}_dims{}_emb{}_{}_steps{}_scale{}_min{}_max{}_sample{}_reweight{}'.format(
-        args.lr, args.weight_decay, args.batch_size, args.dims, args.emb_size, args.mean_type, \
-                args.steps, args.noise_scale, args.noise_min, args.noise_max, args.sampling_steps, args.reweight), file=f)
-    print("End. Best Epoch {:03d} ".format(best_epoch), file=f)
-    print(evaluate_utils.print_results(None, best_results, best_test_results), file=f)
-    print("End time: ", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), file=f)
-    f.write("\n\n")
+print('===' * 18)
+print("End. Best Epoch {:03d} ".format(best_epoch))
+print(evaluate_utils.print_results(None, best_results, best_test_results))
+print("End time: ", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
 
 
