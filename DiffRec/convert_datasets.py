@@ -1,6 +1,6 @@
 import numpy as np
 
-data = 'lastfm-1m'
+data = 'ml-1m'
 
 train_origin = np.load(f'{data}/{data}.train', allow_pickle=True)
 test_origin = np.load(f'{data}/{data}.test', allow_pickle=True)
