@@ -63,8 +63,6 @@ python DiffRec/convert_datasets.py
 ```
 by changing the dataset name inside the script. This will generate the train, validation, and test sets in a compatible version to run with the authors' original code.
 
-Once again, download the files, and put/decompress them in the ./datasets/ folder.
-
 #### Reproduce results
 
 To reproduce the results, you first need to train DiffRec and L-DiffRec by exploring the hyper-parameters through a grid search. The original authors' code does not allow, by design, to explore various hyper-parameters settings and choose the best one according to the results on the validation set. Thus, we provide a possible implementation to create the whole grid search exploration, train the models, and eventually select the best configuration on the validation set.
