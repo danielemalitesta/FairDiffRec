@@ -57,7 +57,11 @@ python inference.py --dataset <dataset_name>
 #### Datasets [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11502753.svg)](https://doi.org/10.5281/zenodo.11502753)
 For this RQ, you need two more recommendation datasets (Movielens-1M_A and Foursquare_TKY) which come with users' metadata to calculate fairness metrics.
 
-Once you have downloaded the two datasets from Zenodo, run the following script to .
+Once you have downloaded the two datasets from Zenodo, run the following script: 
+```sh
+python DiffRec/convert_datasets.py
+```
+by changing the dataset name inside the script. This will generate the train, validation, and test sets in a compatible version to run with the authors' original code.
 
 Once again, download the files, and put/decompress them in the ./datasets/ folder.
 
