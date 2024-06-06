@@ -98,3 +98,66 @@ For your convenience, here, we report the best hyper-parameters for DiffRec and 
 Then, run the inference scripts for all settings. This will produce a tsv file (in ./saved_models/<dataset_name>/) containing the predicted recommendation lists for each user.
 
 All other recommendation baselines for RQ2 are trained with [RecBole](https://github.com/RUCAIBox/RecBole). You will use the scripts trainer.py and metrics.py (heavily dependent on RecBole) to calculate the fairness metrics from the obtained recommendation lists (tsv files).
+
+The best hyper-parameters found on the two datasets are:
+
+- BPRMF:
+  - foursquare_tky:
+      - embedding_size: 128
+      - learning_rate: 2e-4
+  - ml-1m:
+      - embedding_size: 128
+      - learning_rate: 2e-4
+- NeuMF:
+    - foursquare_tky:
+      - dropout_prob: 0.3
+      - learning_rate: 2e-4
+      - mf_embedding_size: 128
+      - mlp_embedding_size: 64
+      - mlp_hidden_size: [128,64]
+    - ml-1m:
+      - dropout_prob: 0.3
+      - learning_rate: 2e-4
+      - mf_embedding_size: 64
+      - mlp_embedding_size: 64
+      - mlp_hidden_size: [128,64]
+- LightGCN:
+    - foursquare_tky:
+      - learning_rate: 2e-4
+    - ml-1m:
+      - learning_rate: 2e-4
+- UltraGCN:
+    - foursquare_tky:
+      - ILoss_lambda: 1e-7
+      - learning_rate: 2e-4
+      - negative_weight: 10
+      - w1: 1.0
+      - w2: 1e-7
+      - w3: 1.0
+      - w4: 1e-7
+    - ml-1m:
+      - ILoss_lambda: 1e-7
+      - learning_rate: 2e-4
+      - negative_weight: 10
+      - w1: 1.0
+      - w2: 1e-7
+      - w3: 1.0
+      - w4: 1e-7
+- XSimGCL:
+    - foursquare_nyc:
+      - eps: 0.2
+      - lambda: 0.05
+      - learning_rate: 2e-4
+      - temperature: 0.1
+    - ml-1m:
+      - eps: 0.2
+      - lambda: 0.05
+      - learning_rate: 2e-4
+      - temperature: 0.1
+- EASE:
+    - foursquare_nyc:
+      - learning_rate: 1e-4
+      - reg_weight: 100
+    - ml-1m:
+      - learning_rate: 2e-4
+      - reg_weight: 2000
