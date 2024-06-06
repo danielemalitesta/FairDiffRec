@@ -97,4 +97,4 @@ For your convenience, here, we report the best hyper-parameters for DiffRec and 
 
 Then, run the inference scripts for all settings. This will produce a tsv file (in ./saved_models/<dataset_name>/) containing the predicted recommendation lists for each user.
 
-All other recommendation baselines for RQ2 are trained with [RecBole](https://github.com/RUCAIBox/RecBole). 
+All other recommendation baselines for RQ2 are trained with [RecBole](https://github.com/RUCAIBox/RecBole). You will use the scripts trainer.py and metrics.py (heavily dependent on RecBole) to calculate the fairness metrics from the obtained recommendation lists (tsv files).
