@@ -57,10 +57,7 @@ python inference.py --dataset <dataset_name>
 #### Datasets
 For this RQ, you need two more recommendation datasets (Movielens-1M_A and Foursquare_TKY) which come with users' metadata to calculate fairness metrics.
 
-They are available at these links:
-
-- Movielens-1M-A: 
-- Foursquare-TKY:
+They are available at these link: https://zenodo.org/records/11502753.
 
 Once again, download the files, and put/decompress them in the ./datasets/ folder.
 
