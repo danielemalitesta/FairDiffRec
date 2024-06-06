@@ -55,9 +55,9 @@ python inference.py --dataset <dataset_name>
 ### Fairness analysis (RQ2)
 
 #### Datasets [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11502753.svg)](https://doi.org/10.5281/zenodo.11502753)
-For this RQ, you need two more recommendation datasets (Movielens-1M_A and Foursquare_TKY) which come with users' metadata to calculate fairness metrics.
+For this RQ, you need two more recommendation datasets (Movielens-1M_A and Foursquare_TKY) which come with users' metadata to calculate fairness metrics. While we already provide the item embeddings for the two datasets in this repo, you need to download the other dataset files from Zenodo.
 
-Once you have downloaded the two datasets from Zenodo, run the following script: 
+Once you have downloaded them, run the following script: 
 ```sh
 python DiffRec/convert_datasets.py
 ```
@@ -97,4 +97,4 @@ For your convenience, here, we report the best hyper-parameters for DiffRec and 
 
 Then, run the inference scripts for all settings. This will produce a tsv file (in ./saved_models/<dataset_name>/) containing the predicted recommendation lists for each user.
 
-All other recommendation baselines for RQ2 are trained with [RecBole](https://github.com/RUCAIBox/RecBole). 
+All other recommendation baselines for RQ2 are trained with [RecBole](https://github.com/RUCAIBox/RecBole). You will use the scripts trainer.py and metrics.py (heavily dependent on RecBole) to calculate the fairness metrics from the obtained recommendation lists (tsv files).
