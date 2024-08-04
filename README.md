@@ -1,5 +1,5 @@
 # Fair Diffusion Recommender Model
-This is the official implementation of the paper "_How Fair Is Your Diffusion Recommender Model? A Reproducibility and Comparative Analysis_", submitted at RecSys 2024 in the Reproducibility track.
+This is the official implementation of the paper "_How Fair Is Your Diffusion Recommender Model? A Preliminary Investigation_", submitted at RecSys 2024 in the LBR track.
 
 The current code is heavily inspired by the code of the paper "_Diffusion Recommender Model_", accepted at SIGIR 2023:
 ```
@@ -24,35 +24,7 @@ To begin with, install the useful packages as indicated in the original code (th
 - kmeans-pytorch
 - scikit-learn
 
-### Reproducibility (RQ1)
-
-#### Datasets
-First, download the **clean** versions of Movielens-1M, Yelp, and Amazon Book datasets from the authors' public links:
-
-- Movielens-1M: https://github.com/YiyanXu/DiffRec/blob/main/datasets/ml-1m_clean.rar
-- Yelp: https://github.com/YiyanXu/DiffRec/blob/main/datasets/yelp_clean.rar
-- Amazon Book: https://github.com/YiyanXu/DiffRec/blob/main/datasets/amazon-book_clean.rar
-
-Then, put and decompress them in the ./datasets/ folder. Only for the Amazon Book dataset and L-DiffRec, you will need to download the additional item embeddings available at this [link](https://onedrive.live.com/?redeem=aHR0cHM6Ly8xZHJ2Lm1zL3UvYy8xZmZmYjhhNWRiNGM5MTMzL0VlM0s0VExTRklWQmtPZGJ5LU5VRDNVQnA3VW5ReHhoM3JIdlk2cXVFN1g3S0E%5FZT14Z2IwSzM&id=1FFFB8A5DB4C9133%21s32e1caed14d2418590e75bcbe3540f75&cid=1FFFB8A5DB4C9133) (publicly provided by the authors).
-
-#### Reproduce results
-
-To reproduce the results in Table 1, run the training and inference scripts for both DiffRec and L-DiffRec, and all the three datasets. We followed the best hyper-parameter settings found by the authors (and reported in the inference.py files for both [DiffRec](https://github.com/YiyanXu/DiffRec/blob/main/DiffRec/inference.py) and [L-DiffRec](https://github.com/YiyanXu/DiffRec/blob/main/L-DiffRec/inference.py)).
-
-|                  | **DiffRec**                                                                                                                                                                                                                                    | **L-DiffRec**                                                                                                                                                                                                                                                                                                       |
-|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Movielens-1M** | ```python main.py --dataset ml-1m_clean --lr 0.001 --weight_decay 0.0 --batch_size 400 --dims [200,600] --emb_size 10 --mean_type x0 --steps 40 --noise_scale 0.005 --noise_min 0.005 --noise_max 0.01 --sampling_steps 0 --reweight True```   | ```python main.py --dataset ml-1m_clean --lr1 0.001 --lr2 0.0005 --wd1 0.0 --wd2 0.0 --batch_size 400 --n_cate 2 --in_dims [300] --out_dims [] --lamda 0.03 --mlp_dims [300] --emb_size 10 --mean_type x0 --steps 40 --noise_scale 0.005 --noise_min 0.005 --noise_max 0.02 --sampling_steps 0 --reweight 1```      |
-| **Yelp**         | ```python main.py --dataset yelp_clean --lr 1e-05 --weight_decay 0.0 --batch_size 400 --dims [1000] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.01 --noise_min 0.001 --noise_max 0.01 --sampling_steps 0 --reweight 1```            | ```python main.py --dataset yelp_clean --lr1 0.0005 --lr2 0.0001 --wd1 0.0 --wd2 0.0 --batch_size 400 --n_cate 2 --in_dims [300] --out_dims [] --lamda 0.03 --mlp_dims [300] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.01 --noise_min 0.005 --noise_max 0.01 --sampling_steps 0 --reweight 0```        |
-| **Amazon Book**  | ```python main.py --dataset amazon-book_clean --lr 5e-05 --weight_decay 0.0 --batch_size 400 --dims [1000] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.0001 --noise_min 0.0005 --noise_max 0.005 --sampling_steps 0 --reweight 1``` | ```python main.py --dataset amazon-book_clean --lr1 0.0005 --lr2 0.0001 --wd1 0.0 --wd2 0.0 --batch_size 400 --n_cate 2 --in_dims [300] --out_dims [] --lamda 0.05 --mlp_dims [300] --emb_size 10 --mean_type x0 --steps 5 --noise_scale 0.5 --noise_min 0.001 --noise_max 0.005 --sampling_steps 0 --reweight 1``` |
-
-This will produce the model weights file for each dataset-model combination (see in ./saved_models/).
-
-After that, run the inference.py script to check if the results are aligned with what you obtained in the training by only specifying the dataset name (the other parameters are already set in the script itself):
-```sh
-python inference.py --dataset <dataset_name>
-```
-
-### Fairness analysis (RQ2)
+### Fairness analysis
 
 #### Datasets [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11502753.svg)](https://doi.org/10.5281/zenodo.11502753)
 For this RQ, you need two more recommendation datasets (Movielens-1M_A and Foursquare_TKY) which come with users' metadata to calculate fairness metrics. While we already provide the item embeddings for the two datasets in this repo, you need to download the other dataset files from Zenodo.
