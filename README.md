@@ -1,7 +1,7 @@
 # Fair Diffusion Recommender Model
-This is the official implementation of the paper "_How Fair Is Your Diffusion Recommender Model? A Preliminary Investigation_", submitted at RecSys 2024 in the LBR track.
+This is the official implementation of the paper "_Fairness in Diffusion Recommender Models: Insights from an Empirical Study of DiffRec_".
 
-The current code is heavily inspired by the code of the paper "_Diffusion Recommender Model_", accepted at SIGIR 2023:
+The current repository is inspired by the code of the paper "_Diffusion Recommender Model_", published at SIGIR 2023:
 ```
 @inproceedings{wang2023diffrec,
 title = {Diffusion Recommender Model},
