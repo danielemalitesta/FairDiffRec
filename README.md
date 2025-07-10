@@ -26,7 +26,7 @@ To begin with, install the useful packages as indicated in the original code (th
 
 ### Fairness analysis
 
-#### Datasets [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11502753.svg)](https://doi.org/10.5281/zenodo.11502753)
+#### Datasets [Zenodo DOI 10.5281/zenodo.11502753](https://doi.org/10.5281/zenodo.11502753)
 For this RQ, you need two more recommendation datasets (Movielens-1M_A and Foursquare_TKY) which come with users' metadata to calculate fairness metrics. While we already provide the item embeddings for the two datasets in this repo, you need to download the other dataset files from Zenodo.
 
 Once you have downloaded them, run the following script: 
