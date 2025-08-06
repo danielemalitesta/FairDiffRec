@@ -1,5 +1,5 @@
 # Fairness in Diffusion Recommender Models
-This is the official implementation of the paper "_Bias Detection in Diffusion-based Recommendation: Insights from an Empirical Study of DiffRec_".
+This is the official implementation of the paper "_Bias Detection in Diffusion-based Recommendation: Insights from an Empirical Study of DiffRec_", accepted in the LBR track at ACM RecSys 2025.
 
 The current repository is inspired by the code of the paper "_Diffusion Recommender Model_", published at SIGIR 2023:
 ```
