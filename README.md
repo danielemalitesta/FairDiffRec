@@ -1,5 +1,23 @@
 # Fairness in Diffusion Recommender Models
 This is the official implementation of the paper "_How Fair is Your Diffusion Recommender Model?_", accepted in the LBR track at ACM RecSys 2025.
+```
+@inproceedings{10.1145/3705328.3759318,
+author = {Malitesta, Daniele and Medda, Giacomo and Purificato, Erasmo and Marras, Mirko and Malliaros, Fragkiskos and Boratto, Ludovico},
+title = {How Fair is Your Diffusion Recommender Model?},
+booktitle = {Proceedings of the Nineteenth ACM Conference on Recommender Systems},
+year = {2025},
+url = {https://doi.org/10.1145/3705328.3759318},
+doi = {10.1145/3705328.3759318},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+isbn = {9798400713644},
+pages = {1199–1205},
+numpages = {7},
+keywords = {Diffusion Models, Bias, Algorithmic Fairness, Recommender Systems},
+location = {Prague, Czech Republic},
+series = {RecSys '25}
+}
+```
 
 The current repository is inspired by the code of the paper "_Diffusion Recommender Model_", published at SIGIR 2023:
 ```
