@@ -89,11 +89,14 @@ def main():
 
     print(f'Actual configurations: {len(sorted_command_lines)}')
 
-    with open(f'train_all_{args.dataset}.sh', 'w') as f:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    sh_file_path = os.path.join(script_dir, f'train_all_{args.dataset}.sh')
+
+    with open(sh_file_path, 'w') as f:
         print('#!/bin/bash', file=f)
         for cmdl in sorted_command_lines:
             print(cmdl, file=f)
-
 
 if __name__ == '__main__':
     main()
