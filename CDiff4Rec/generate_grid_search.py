@@ -23,14 +23,12 @@ hyperparams = ParameterGrid({
     "--lr": [1e-5, 1e-4, 5e-5, 5e-4],
     "--weight_decay": [0.0, 1e-4],
     "--steps": [10, 40, 50],
-    "--noise_scale": [1e-5, 1e-4, 5e-3, 1e-2, 1e-1],
-    "--noise_min": [5e-4, 1e-3, 5e-3],
-    "--noise_max": [5e-3, 1e-2],
     "--reweight": [True, False],
     "--alpha": [0.1, 0.3, 0.5, 0.7, 0.9],
     "--beta": [0.1, 0.3, 0.5, 0.7, 0.9],
     "--gamma": [0.1, 0.3, 0.5, 0.7, 0.9],
     "--topk": [10, 20, 50],
+    'r_agg': ['att', 'avg', 'sim', None]
 })
 
 
