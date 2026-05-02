@@ -36,8 +36,8 @@ def get_config():
 
     # params for global attention
     parser.add_argument('--alpha', type=float, default=0.1, help='the importance of the user’s own preference')
-    parser.add_argument('--beta', type=float, default=0.8, help='the significance of real user')
-    parser.add_argument('--gamma', type=float, default=0.1, help='the significance of psuedo user')
+    parser.add_argument('--beta', type=float, default=0.9, help='the significance of real user')
+    parser.add_argument('--gamma', type=float, default=0, help='the significance of psuedo user')
 
     parser.add_argument('--tau', type=float, default=1.0, help='the temperature for consie similarity')
     parser.add_argument('--topk', type=int, default=10, help='he number of top-K similar interest users')
