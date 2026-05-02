@@ -28,7 +28,7 @@ hyperparams = ParameterGrid({
     "--beta": [0.1, 0.3, 0.5, 0.7, 0.9],
     "--gamma": [0.1, 0.3, 0.5, 0.7, 0.9],
     "--topk": [10, 20, 50],
-    'r_agg': ['att', 'avg', 'sim', None]
+    "r_agg": ['att', 'avg', 'sim', None]
 })
 
 
