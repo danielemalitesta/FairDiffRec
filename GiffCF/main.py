@@ -23,8 +23,8 @@ DEFAULT_DATA_PATHS = {
     'movielens': 'datasets/ml-1m_clean',
     'amazon': 'datasets/amazon-book_clean',
     'yelp': 'datasets/yelp_clean',
-    'ml1m': 'datasets/ml1m',
-    'foursquare': 'datasets/foursquare',
+    'ml1m': '/content/FairDiffRec/datasets/ml-1m',
+    'foursquare': '/content/FairDiffRec/datasets/foursquare_tky'
 }
 
 
