@@ -9,7 +9,6 @@ parser.add_argument('--data_path', type=str, default='/content/FairDiffRec/datas
 
 args = parser.parse_args()
 
-# Unmodified hyperparameters list
 hyperparams = ParameterGrid({
     "--lr": [1e-5, 1e-4, 5e-5, 5e-4],
     "--weight_decay": [0.0, 1e-4],
@@ -22,7 +21,6 @@ hyperparams = ParameterGrid({
 
 
 def summary(configuration):
-    # Skip None values so they don't corrupt the logfile name
     final_list = [('%s=%s' % (k[2:], v)) for (k, v) in configuration.items() if v is not None]
     return '_'.join(final_list)
 
@@ -41,8 +39,7 @@ def to_logfile(c):
 def main():
     logs_path = 'logs'
     log_dir = os.path.join(logs_path, args.dataset)
-
-    # Safely create directory
+    
     os.makedirs(log_dir, exist_ok=True)
 
     command_lines = set()
@@ -50,8 +47,6 @@ def main():
     print(f'Total configurations: {len(hyperparams)}')
 
     for hyperparam in hyperparams:
-        # All noise parameters and admissibility checks have been removed.
-        # Every configuration is now processed directly.
             
         logfile = to_logfile(hyperparam)
         log_filepath = os.path.join(log_dir, logfile)
@@ -66,7 +61,6 @@ def main():
             command_line = f'python "/content/FairDiffRec/CDiff4Rec/main.py" {to_cmd(hyperparam)} --cuda --dataset={args.dataset} --data_path={args.data_path} > "{log_filepath}" 2>&1'
             command_lines.add(command_line)
 
-    # Sort command lines and convert back to list
     sorted_command_lines = sorted(list(command_lines))
 
     print(f'Configurations to run: {len(sorted_command_lines)}')
