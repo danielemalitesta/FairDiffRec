@@ -26,7 +26,6 @@ def summary(configuration):
 
 
 def to_cmd(c):
-    # Skip None values to avoid passing "None" as a literal string argument
     command = ' '.join([f'{k}={v}' for k, v in c.items() if v is not None])
     return command
 
