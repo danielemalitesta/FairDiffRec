@@ -33,7 +33,6 @@ def get_score_mat_for_VAE(model, train_loader, gpu):
             score_mat[mini_batch['user'], :] = output
     return score_mat
 
-
 def get_SNM(total_user, total_item, R, gpu):
     Zero_top = torch.zeros(total_user, total_user)
     Zero_under = torch.zeros(total_item, total_item)
@@ -116,9 +115,10 @@ def get_fill_value(agg, topk):
         fill_value = None
     return fill_value
 
+
 def evaluate(model, diffusion, data_loader, data_te, 
              r_topk_UU, f_topk_UU, f_train_data_A,
-             mask_his, topN, n_user, n_item, f_n_user, args):
+             mask_his, topN, n_user, n_item, f_n_user, args, write=False, write_path=None):
     
     device = torch.device("cuda:0" if args.cuda else "cpu")
 
@@ -177,8 +177,19 @@ def evaluate(model, diffusion, data_loader, data_te,
             
         r_predictions = args.alpha * r_predictions + args.beta * r_info + args.gamma * f_info
         r_predictions[mask_his.nonzero()] = -np.inf
-        _, indices = torch.topk(r_predictions, topN[-1])
+        
+
+        values, indices = torch.topk(r_predictions, topN[-1])
         predict_items = indices.cpu().numpy().tolist()
+        predict_values = values.cpu().numpy().tolist()
+
+        if write and write_path is not None:
+            with open(write_path, 'w') as f:
+                for user in range(n_user):
+                    for idx, item in enumerate(predict_items[user]):
+                        f.write(f'{user}\t{item}\t{predict_values[user][idx]}\n')
+       
+        
         del r_predictions, r_info, f_info
     
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
@@ -193,7 +204,6 @@ def keep_topk_values(mat, k, fill_value = None):
 
     top_values, top_indices = torch.topk(mat, k = k, dim = 1)
 
-    
     result_mat = torch.zeros_like(mat)
     
     if fill_value is None:
