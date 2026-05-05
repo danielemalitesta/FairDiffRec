@@ -271,7 +271,7 @@ def main(args):
             total_r_loss += r_loss.item()
             total_f_loss += args.lamda * f_loss.item()
         
-        if epoch % 10 == 0:
+        if epoch % 5 == 0:
             valid_results = evaluate(model, diffusion, test_loader, valid_y_data, r_topk_UU, f_topk_UU, f_train_data_A, train_data, eval(args.topN), n_user, n_item, f_n_user, args)
             if args.tst_w_val:
                 test_results = evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args)
