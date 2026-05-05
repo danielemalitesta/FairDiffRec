@@ -43,6 +43,7 @@ def train(cfg):
     # Create model
     if not hasattr(cfg.model, 'cache_path'):
         cfg.model.cache_path = os.path.join(cfg.dataset.path, 'cache')
+    os.makedirs(cfg.model.cache_path, exist_ok=True)
     seed_everything(cfg.model.seed)
     model = load_model(input=x_train, **vars(cfg.model))
     if hasattr(cfg.model, 'init_ckpt_path'):
@@ -88,6 +89,7 @@ def evaluate(cfg):
     # Load and test model
     if not hasattr(cfg.model, 'cache_path'):
         cfg.model.cache_path = os.path.join(cfg.dataset.path, 'cache')
+    os.makedirs(cfg.model.cache_path, exist_ok=True)
     if not hasattr(cfg.model, 'ckpt_path'):
         cfg.model.ckpt_path = os.path.join(cfg.output_dir, cfg.name, 'checkpoint.weights.h5')
     model = load_model(input=x_train, **vars(cfg.model))
