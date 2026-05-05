@@ -271,7 +271,7 @@ def main(args):
             total_r_loss += r_loss.item()
             total_f_loss += args.lamda * f_loss.item()
         
-        if epoch % 1 == 0:
+        if epoch % 10 == 0:
             valid_results = evaluate(model, diffusion, test_loader, valid_y_data, r_topk_UU, f_topk_UU, f_train_data_A, train_data, eval(args.topN), n_user, n_item, f_n_user, args)
             if args.tst_w_val:
                 test_results = evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args)
@@ -306,6 +306,19 @@ def main(args):
         save_path = os.path.join(save_dir_path, "model.pth")
         torch.save(best_model_state_dict, save_path)
         print(f"Model saved in {save_path}")
+
+
+    model.load_state_dict(best_model_state_dict)
+    if args.r_agg == "att" or args.f_agg == "att":
+        att_model.load_state_dict(best_att_model_state_dict)
+    
+    final_tsv_path = os.path.join(save_dir_path, "best_recommendations.tsv")
+    
+    if args.tst_w_val:
+        evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
+    else:
+        evaluate(model, diffusion, test_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
+    print(f"Recommendations saved in {final_tsv_path}")
         
     print('==='*18)
     print("End. Best Epoch {:03d} ".format(best_epoch))
