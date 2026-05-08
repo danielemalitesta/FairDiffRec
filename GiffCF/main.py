@@ -67,14 +67,31 @@ def train(cfg):
     elapsed_time = end_time - start_time
     # Load and test model
     model = load_model(input=x_train, **vars(cfg.model))
-    res = model.evaluate(test_ds, return_dict=True, **vars(cfg.model))
-    if cfg.verbose > 0:
-        print(tabulate([(cfg.name, *res.values())], headers=res.keys()))
+    
+    val_res = model.evaluate(val_ds, return_dict=True, **vars(cfg.model))
+    test_res = model.evaluate(test_ds, return_dict=True, **vars(cfg.model))
+
+    recall_key = [k for k in test_res.keys() if k.startswith('recall')][1]
+    valid_recall = val_res[recall_key]
+    test_recall = test_res[recall_key]
+
     if hasattr(cfg, 'output_dir'):
-        with open(os.path.join(cfg.output_dir, cfg.name, 'results.txt'), 'w') as f:
+        folder_name = f"_valid_recall_{valid_recall:.4f}_test_recall_{test_recall:.4f}"
+        save_dir_path = os.path.join('saved_models', folder_name)
+        os.makedirs(save_dir_path, exist_ok=True)
+
+        tsv_path = os.path.join(save_dir_path, 'best_recommendations.tsv')
+        max_k = 100
+        model.save_recommendations(test_ds, filepath=tsv_path, top_k=max_k)
+
+        with open(os.path.join(save_dir_path, 'results.txt'), 'w') as f:
             f.write(f'Training time: {elapsed_time:.2f} seconds\n')
-            f.write(tabulate([(cfg.name, *res.values())], headers=res.keys()))
-    return res
+            f.write(tabulate([(cfg.name, *test_res.values())], headers=test_res.keys()))
+
+    if cfg.verbose > 0:
+        print(tabulate([(cfg.name, *test_res.values())], headers=test_res.keys()))
+
+    return test_res
 
 
 def evaluate(cfg):
@@ -86,19 +103,37 @@ def evaluate(cfg):
     train_ds, val_ds, test_ds = create_datasets(
         x_train, x_val, x_test, **vars(cfg.model)
     )
+    
     # Load and test model
     if not hasattr(cfg.model, 'cache_path'):
         cfg.model.cache_path = os.path.join(cfg.dataset.path, 'cache')
     os.makedirs(cfg.model.cache_path, exist_ok=True)
+    
     if not hasattr(cfg.model, 'ckpt_path'):
         cfg.model.ckpt_path = os.path.join(cfg.output_dir, cfg.name, 'checkpoint.weights.h5')
+    
     model = load_model(input=x_train, **vars(cfg.model))
-    res = model.evaluate(test_ds, return_dict=True, **vars(cfg.model))
-    if cfg.verbose > 0:
-        print(tabulate([(cfg.name, *res.values())], headers=res.keys()))
+    
+    val_res = model.evaluate(val_ds, return_dict=True, **vars(cfg.model))
+    test_res = model.evaluate(test_ds, return_dict=True, **vars(cfg.model))
+
+    recall_key = [k for k in test_res.keys() if k.startswith('recall')][1]
+    valid_recall = val_res[recall_key]
+    test_recall = test_res[recall_key]
+
     if hasattr(cfg, 'output_dir'):
-        with open(os.path.join(cfg.output_dir, cfg.name, 'eval_results.txt'), 'w') as f:
-            f.write(tabulate([(cfg.name, *res.values())], headers=res.keys()))
+        folder_name = f"_valid_recall_{valid_recall:.4f}_test_recall_{test_recall:.4f}"
+        save_dir_path = os.path.join('saved_models', folder_name)
+        os.makedirs(save_dir_path, exist_ok=True)
+
+        tsv_path = os.path.join(save_dir_path, 'best_recommendations.tsv')
+        model.save_recommendations(test_ds, filepath=tsv_path, top_k=100)
+        
+        with open(os.path.join(save_dir_path, 'eval_results.txt'), 'w') as f:
+            f.write(tabulate([(cfg.name, *test_res.values())], headers=test_res.keys()))
+
+    if cfg.verbose > 0:
+        print(tabulate([(cfg.name, *test_res.values())], headers=test_res.keys()))
 
 
 if __name__ == '__main__':
