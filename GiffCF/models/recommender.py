@@ -107,3 +107,23 @@ class Recommender(Model):
             ds = ds.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
 
         return super().fit(ds, epochs=n_epochs, callbacks=callbacks, verbose=verbose)
+
+    def save_recommendations(self, ds: tf.data.Dataset, filepath: str, top_k: int = 100, batch_size: int = 100):
+        tot_users = 0
+        ds = ds.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
+        
+        with open(filepath, 'w') as f:
+            for x_history, _, mask in ds:
+                scores = tf.where(mask, -np.inf, self(x_history, training=False))
+                top_k_results = tf.math.top_k(scores, k=top_k)
+                values = top_k_results.values.numpy()
+                indices = top_k_results.indices.numpy()
+                
+                current_batch_size = x_history.shape[0]
+                for u in range(current_batch_size):
+                    for idx, item in enumerate(indices[u]):
+                        f.write(f'{tot_users}\t{item}\t{values[u][idx]}\n')
+                    tot_users += 1
+                    
+        print(f"Recommendations saved with {tot_users} users.")
+     
