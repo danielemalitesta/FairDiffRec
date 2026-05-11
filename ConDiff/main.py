@@ -8,6 +8,7 @@ import os
 import time
 import numpy as np
 import copy
+from datetime import datetime
 
 import torch
 import torch.nn as nn
@@ -81,9 +82,9 @@ device = torch.device("cuda:0" if args.cuda else "cpu")
 print("Starting time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 
 ### DATA LOAD ###
-train_path = args.data_path + 'train_list.npy'
-valid_path = args.data_path + 'valid_list.npy'
-test_path = args.data_path + 'test_list.npy'
+train_path = args.data_path + args.dataset + '/train_list.npy'
+valid_path = args.data_path + args.dataset + '/valid_list.npy'
+test_path = args.data_path + args.dataset + '/test_list.npy'
 
 train_data, valid_y_data, test_y_data, n_user, n_item = data_utils.data_load(train_path, valid_path, test_path)
 train_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A))
@@ -129,7 +130,7 @@ def calcRegLoss(model):
 		ret += W.norm(2).square()
 	return ret
 
-def evaluate(data_loader, data_te, mask_his, topN):
+def evaluate(data_loader, data_te, mask_his, topN, write=False, write_path=None):
     model.eval()
     e_idxlist = list(range(mask_his.shape[0]))
     e_N = mask_his.shape[0]
@@ -137,18 +138,38 @@ def evaluate(data_loader, data_te, mask_his, topN):
     predict_items = []
     target_items = []
     for i in range(e_N):
-        target_items.append(data_te[i, :].nonzero()[1].tolist())  # 尾节点的列表
+        target_items.append(data_te[i, :].nonzero()[1].tolist())
     
-    with torch.no_grad():
-        for batch_idx, batch in enumerate(data_loader):
-            his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
-            batch = batch.to(device)
-            prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
-            prediction[his_data.nonzero()] = -np.inf
+    if write and write_path:
+        tot_users = 0
+        with open(write_path, 'w') as f:
+            with torch.no_grad():
+                for batch_idx, batch in enumerate(data_loader):
+                    his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
+                    batch = batch.to(device)
+                    prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
+                    prediction[his_data.nonzero()] = -np.inf
 
-            _, indices = torch.topk(prediction, topN[-1])
-            indices = indices.cpu().numpy().tolist()
-            predict_items.extend(indices)
+                    values, indices = torch.topk(prediction, topN[-1])
+                    indices = indices.cpu().numpy().tolist()
+                    predict_items.extend(indices)
+                    
+                    for user in range(batch.shape[0]):
+                        current_values = values[user]
+                        for idx, item in enumerate(indices[user]):
+                            f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
+                        tot_users += 1
+    else:
+        with torch.no_grad():
+            for batch_idx, batch in enumerate(data_loader):
+                his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
+                batch = batch.to(device)
+                prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
+                prediction[his_data.nonzero()] = -np.inf
+
+                _, indices = torch.topk(prediction, topN[-1])
+                indices = indices.cpu().numpy().tolist()
+                predict_items.extend(indices)
 
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
 
@@ -156,9 +177,10 @@ def evaluate(data_loader, data_te, mask_his, topN):
 
 best_recall, best_epoch = -100, 0
 best_test_result = None
+best_model_state_dict = None
+
 print("Start training...")
 for epoch in range(1, args.epochs + 1):
-    # if epoch - best_epoch >= 20:
     if epoch - best_epoch >= 50:
         print('-'*18)
         print('Exiting from training early')
@@ -187,16 +209,13 @@ for epoch in range(1, args.epochs + 1):
         else:
             test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN))
         evaluate_utils.print_results(None, valid_results, test_results)
+        
         if valid_results[1][1] > best_recall:
             best_recall, best_epoch = valid_results[1][1], epoch
             best_results = valid_results
             best_test_results = test_results
-
-            if not os.path.exists(args.save_path):
-                os.makedirs(args.save_path)
-            torch.save(model, '{}{}_lr{}_wd{}_bs{}_dims{}_emb{}_{}_steps{}_scale{}_min{}_max{}_sample{}_reweight{}_{}.pth' \
-                .format(args.save_path, args.dataset, args.lr, args.weight_decay, args.batch_size, args.dims, args.emb_size, args.mean_type, \
-                args.steps, args.noise_scale, args.noise_min, args.noise_max, args.sampling_steps, args.reweight, args.log_name))
+            # Saving the best state in memory
+            best_model_state_dict = deepcopy({k: v.cpu() for k, v in model.state_dict().items()})
     
     print("Runing Epoch {:03d} ".format(epoch) + 'train loss {:.4f}'.format(total_loss) + " costs " + time.strftime(
                         "%H: %M: %S", time.gmtime(time.time()-start_time)))
@@ -205,9 +224,27 @@ for epoch in range(1, args.epochs + 1):
 print('==='*18)
 print("End. Best Epoch {:03d} ".format(best_epoch))
 evaluate_utils.print_results(None, best_results, best_test_results)   
+
+#final save
+if best_model_state_dict is not None:
+    val_rec = best_results[1][1]
+    test_rec = best_test_results[1][1]
+
+    folder_name = f"_valid_recall_{val_rec:.4f}_test_recall_{test_rec:.4f}"
+    save_dir_path = os.path.join('saved_models', folder_name)
+    os.makedirs(save_dir_path, exist_ok=True)
+
+    save_path = os.path.join(save_dir_path, "model.pth")
+    torch.save(best_model_state_dict, save_path)
+
+    model.load_state_dict(best_model_state_dict)
+    model.to(device)
+    final_tsv_path = os.path.join(save_dir_path, "best_recommendations.tsv")
+    
+    if args.tst_w_val:
+        evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=final_tsv_path)
+    else:
+        evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=final_tsv_path)
+    print(f"Recommendations saved in: {final_tsv_path}")
+
 print("End time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-
-
-
-
-
