@@ -126,6 +126,8 @@ def evaluate(cfg):
         save_dir_path = os.path.join('saved_models', folder_name)
         os.makedirs(save_dir_path, exist_ok=True)
 
+        print(f'Best recommendations saved in {os.path.abspath(save_dir_path)}')
+        
         tsv_path = os.path.join(save_dir_path, 'best_recommendations.tsv')
         model.save_recommendations(test_ds, filepath=tsv_path, top_k=100)
         
