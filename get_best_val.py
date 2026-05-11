@@ -50,7 +50,7 @@ def main():
         print("="*50)
         print("Best Hyperparameters:")
         
-        params = re.findall(r'([a-zA-Z0-9_]+=[a-zA-Z0-9.-]+)', best_hyperparams)
+        params = re.findall(r'([a-zA-Z0-9_]+=[a-zA-Z0-9.\-, \[\]]+)', best_hyperparams)
         for p in params:
             print(f"  - {p}")
             
