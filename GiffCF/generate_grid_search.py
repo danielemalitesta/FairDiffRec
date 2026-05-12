@@ -52,7 +52,7 @@ def main():
                 completed = 'End. Best Epoch' in content
 
         if not completed:
-            config_path = f"/content/FairDiffRec/GiffCF/configs/ml1m.toml"
+            config_path = f"/content/FairDiffRec/GiffCF/configs/{args.dataset}.toml"
             
             params_str = to_params_string(hyperparam)
             
