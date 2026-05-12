@@ -1,19 +1,26 @@
 import sys
+import argparse
 import pandas as pd
 import numpy as np
 sys.path.append('/content/FairDiffRec/CDiff4Rec')
 import data_utils
 
+parser = argparse.ArgumentParser(description="Evaluate Fairness for Recommendation Systems")
+parser.add_argument('--dataset', type=str, default='ml-1m')
+parser.add_argument('--tsv_path', type=str, default='/content/FairDiffRec/best_recommendations.tsv')
+args = parser.parse_args()
+
 
 K = 20
 SH_RATIO = 0.2  
-TSV_PATH = '/content/FairDiffRec/best_recommendations.tsv'
-DATA_DIR = '/content/FairDiffRec/datasets/ml-1m/'
+TSV_PATH = args.tsv_path
+DATA_DIR = f'/content/FairDiffRec/datasets/{args.dataset}/'
 
 
 recs = pd.read_csv(TSV_PATH, sep='\t', header=None, names=['user_id', 'item_id', 'score'])
 users_map = pd.read_csv(DATA_DIR + 'users_map.tsv', sep='\t', header=None, names=['org_id', 'int_id'], dtype=str)
-users_info = pd.read_csv(DATA_DIR + 'ml-1m.user', sep='\t', dtype=str)
+users_info_path = DATA_DIR + f'{args.dataset}.user'
+users_info = pd.read_csv(users_info_path, sep='\t', dtype=str)
 
 train_path = DATA_DIR + 'train_list.npy'
 valid_path = DATA_DIR + 'valid_list.npy'
@@ -30,7 +37,6 @@ genders = list(set(gender_dict.values()))
 group1_users = [u for u, g in gender_dict.items() if g == genders[0]]
 group2_users = [u for u, g in gender_dict.items() if g == genders[1]]
 
-
 item_pop = np.array(train_mat.sum(axis=0)).flatten()
 n_sh = int(n_items * SH_RATIO)
 sh_items = np.argsort(item_pop)[::-1][:n_sh]
@@ -38,7 +44,6 @@ sh_items = np.argsort(item_pop)[::-1][:n_sh]
 sh_mask = np.zeros(n_items, dtype=bool)
 sh_mask[sh_items] = True
 lt_mask = ~sh_mask
-
 
 ndcg_list = np.zeros(n_users)
 rec_list  = np.zeros(n_users)
@@ -60,7 +65,7 @@ for u in range(n_users):
     idcg = np.sum(1.0 / np.log2(np.arange(2, min(len(targets), K) + 2)))
     ndcg_list[u] = dcg / idcg if idcg > 0 else 0.0
 
-#Consumer Fairness
+# Consumer Fairness
 def get_delta(metric_array):
     g1_valid = [u for u in group1_users if len(test_mat[u].nonzero()[1]) > 0]
     g2_valid = [u for u in group2_users if len(test_mat[u].nonzero()[1]) > 0]
@@ -72,7 +77,7 @@ def get_delta(metric_array):
 delta_ndcg = get_delta(ndcg_list)
 delta_rec = get_delta(rec_list)
 
-#Provider Fairness
+# Provider Fairness
 all_preds = top_k_recs['item_id'].values
 raw_visibility = np.bincount(all_preds, minlength=n_items)
 visibility_prob = raw_visibility / (n_users * K)
@@ -96,7 +101,7 @@ sh_exp = np.sum(exposure[sh_mask]) / dist_sh
 lt_exp = np.sum(exposure[lt_mask]) / dist_lt
 delta_exp = abs(sh_exp - lt_exp)
 
-#Results
+# Results
 print("\n" + "="*45)
 print(f" FAIRNESS RESULTS (K={K})")
 print("="*45)
