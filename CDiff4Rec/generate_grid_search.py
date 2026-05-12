@@ -10,13 +10,13 @@ parser.add_argument('--data_path', type=str, default='/content/FairDiffRec/datas
 args = parser.parse_args()
 
 hyperparams = ParameterGrid({
-    "--lr": [1e-5, 1e-4, 5e-5, 5e-4],
+    "--lr": [5e-5, 5e-4, 1e-4],
     "--weight_decay": [0.0, 1e-4],
-    "--steps": [10, 40, 50],
+    "--steps": [10, 25, 50],
     "--reweight": [True, False],
     "--alpha": [0.1, 0.3, 0.5, 0.7, 0.9],
     "--topk": [10, 20, 50],
-    "--r_agg": ['att', 'avg', 'sim', None]
+    "--r_agg": ['avg', 'sim']
 })
 
 
