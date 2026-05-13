@@ -12,10 +12,9 @@ args = parser.parse_args()
 hyperparams = ParameterGrid({
     "--lr": [5e-5, 5e-4, 1e-4],
     "--weight_decay": [0.0, 1e-4],
-    "--steps": [10, 25, 50],
-    "--reweight": [True, False],
+    "--steps": [10, 50],
     "--alpha": [0.1, 0.3, 0.5, 0.7, 0.9],
-    "--topk": [10, 20, 50],
+    "--topk": [20],
     "--r_agg": ['avg', 'sim']
 })
 
