@@ -40,7 +40,7 @@ grids = {
     }),
     
     'foursquare_tky': ParameterGrid({
-        "--lr": [5e-6, 1e-5, 5e-5],
+        "--lr": [1e-5, 5e-5, 1e-4],
         "--weight_decay": [1e-3, 1e-2],
         "--batch_size": [400],
         "--dims": ['[1000]', '[2000]'],
