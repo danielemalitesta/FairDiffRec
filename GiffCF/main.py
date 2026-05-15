@@ -65,9 +65,8 @@ def train(cfg):
     model.fit(train_ds, callbacks=callbacks, verbose=cfg.verbose, **vars(cfg.model))
     end_time = time.time()
     elapsed_time = end_time - start_time
+
     # Load and test model
-    model = load_model(input=x_train, **vars(cfg.model))
-    
     val_res = model.evaluate(val_ds, return_dict=True, **vars(cfg.model))
     test_res = model.evaluate(test_ds, return_dict=True, **vars(cfg.model))
 
@@ -115,6 +114,7 @@ def evaluate(cfg):
         cfg.model.ckpt_path = os.path.join(cfg.output_dir, cfg.name, 'checkpoint.weights.h5')
     
     model = load_model(input=x_train, **vars(cfg.model))
+    model.load_weights(cfg.model.ckpt_path)
     
     val_res = model.evaluate(val_ds, return_dict=True, **vars(cfg.model))
     test_res = model.evaluate(test_ds, return_dict=True, **vars(cfg.model))
