@@ -16,12 +16,12 @@ embed_dim = 200
 
 T = 3
 alpha = 1.5
-ideal_weight = 0.0
+ideal_weight = 0.3
 noise_scale = 0.0
 noise_decay = 0.5
 
-val_freq = 10
-early_stopping = 200
+val_freq = 5
+early_stopping = 30
 learning_rates = [1e-3, 1e-3]
 
 seed = 20
