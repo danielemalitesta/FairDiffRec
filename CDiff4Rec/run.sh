@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 
 dataset_name=$1
 
@@ -16,7 +16,7 @@ case $dataset_name in
         cmd="python -u main.py --cuda --dataset ml-1m --alpha 0.5 --r_agg avg --lr 0.0001 --topk 20 --steps 10 --weight_decay 0.0"
         ;;
         "foursquare_tky")
-        cmd="python -u main.py --cuda --dataset foursquare_tky --alpha 0.9 --r_agg sim --lr 0.0001 --topk 20 --steps 10 --weight_decay 0.0""
+        cmd="python -u main.py --cuda --dataset foursquare_tky --alpha 0.9 --r_agg sim --lr 0.0001 --topk 20 --steps 10 --weight_decay 0.0"
         ;;
     *)
         echo "Invalid dataset name! Please provide one of the following dataset names: yelp, amazon_game, citeulike_t, ml-1m, foursquare_tky"
