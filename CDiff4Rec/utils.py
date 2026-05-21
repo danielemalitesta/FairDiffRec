@@ -79,15 +79,15 @@ def set_random_seed(random_seed):
     np.random.seed(random_seed)
     random.seed(random_seed)
 
-# 각 행의 norm을 계산하여 정규화
+# Calculate norm for each row to normalize
 def get_cos_similarity_mat(M):
     row_norms = np.sqrt((M.multiply(M)).sum(axis=1))
     norm_M = M / np.clip(row_norms, a_min=1e-8, a_max=None)
 
-    # 코사인 유사도 계산
+    # Cosine similarity
     similarity = cosine_similarity(norm_M)
 
-    # 대각선 원소를 0으로 설정
+    # Fill diagonal with 0
     np.fill_diagonal(similarity, 0.0)
     
     return torch.tensor(similarity)
@@ -176,6 +176,11 @@ def evaluate(model, diffusion, data_loader, data_te,
             del f_predictions
             
         r_predictions = args.alpha * r_predictions + args.beta * r_info + args.gamma * f_info
+        
+        # --- CLONE AND SAVE UNMASKED SCORES ---
+        # Detach the predictions from GPU and save them as numpy array before applying the -inf mask
+        predicted_matrix = r_predictions.clone().detach().cpu().numpy()
+        
         r_predictions[mask_his.nonzero()] = -np.inf
         
 
@@ -198,7 +203,7 @@ def evaluate(model, diffusion, data_loader, data_te,
     gc.collect()
     torch.cuda.empty_cache()
     
-    return test_results
+    return test_results, predicted_matrix
 
 def keep_topk_values(mat, k, fill_value = None):
 
