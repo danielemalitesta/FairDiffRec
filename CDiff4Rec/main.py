@@ -6,6 +6,7 @@ import gc
 import os
 import time
 import copy
+from datetime import datetime
 
 import torch
 import torch.nn as nn
@@ -15,6 +16,7 @@ from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
 import numpy as np
+import scipy.sparse as sp
 
 import models.gaussian_diffusion_method as gd
 from models.DNN import DNN
@@ -33,7 +35,7 @@ def main(args):
     print("device: ", device)
     code_start_time = datetime.now()
 
-    # 시작 시간 출력
+    # Start time output
     print("Start time:", code_start_time.strftime('%Y-%m-%d %H:%M:%S'))
 
 
@@ -193,6 +195,42 @@ def main(args):
     best_test_result = None
     print("args.random_seed", args.random_seed)
     set_random_seed(args.random_seed)
+    
+
+    TEST_ONLY = False
+    LOAD_PATH = "./saved_models/model.pth"
+
+    if TEST_ONLY:
+        print(f"\n--- Evaluate mode on ---")
+        
+        model.load_state_dict(torch.load(LOAD_PATH))
+        model.eval()
+
+        if not os.path.exists(args.save_path):
+            os.makedirs(args.save_path)
+
+        final_tsv_path = os.path.join(args.save_path, "best_recommendations.tsv")
+        
+        # Unpack both test_results and predicted_matrix
+        if args.tst_w_val:
+            test_results, predicted_matrix = evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
+        else:
+            test_results, predicted_matrix = evaluate(model, diffusion, test_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
+        
+        print("\n[Results]")
+        evaluate_utils.print_results(None, None, test_results)
+        print(f"Recommendations saved in {final_tsv_path}")
+        
+        base_filename = os.path.join(args.save_path, f'matrices_{args.dataset.replace("/", "")}')
+        
+        # Save original sparse matrix (using mask_tv which includes train + valid history)
+        sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+        # Save dense predictions
+        np.save(f'{base_filename}_predicted.npy', predicted_matrix)
+        
+        print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
+        
+        return
 
     print("Start training...")
     for epoch in range(1, args.epochs + 1):
@@ -272,11 +310,12 @@ def main(args):
             total_f_loss += args.lamda * f_loss.item()
         
         if epoch % 5 == 0:
-            valid_results = evaluate(model, diffusion, test_loader, valid_y_data, r_topk_UU, f_topk_UU, f_train_data_A, train_data, eval(args.topN), n_user, n_item, f_n_user, args)
+            valid_results, _ = evaluate(model, diffusion, test_loader, valid_y_data, r_topk_UU, f_topk_UU, f_train_data_A, train_data, eval(args.topN), n_user, n_item, f_n_user, args)
             if args.tst_w_val:
-                test_results = evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args)
+                test_results, _ = evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args)
             else:
-                test_results = evaluate(model, diffusion, test_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args)
+                test_results, _ = evaluate(model, diffusion, test_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args)
+            
             evaluate_utils.print_results(None, valid_results, test_results)
 
             if valid_results[1][1] > best_recall: # recall@20 as selection
@@ -294,10 +333,7 @@ def main(args):
             "time costs: " + time.strftime("%H: %M: %S", time.gmtime(time.time()-start_time)))
         print('---'*18)
         
-    if not args.save:
-        save_dir_path = args.save_path + f"_valid_recall_{best_recall:.4f}_test_recall_{test_recall:.4f}"
-    else:
-        save_dir_path = args.save_path
+    save_dir_path = args.save_path + f"_valid_recall_{best_recall:.4f}_test_recall_{test_recall:.4f}"
         
     if not os.path.exists(save_dir_path):
         os.makedirs(save_dir_path)
@@ -314,24 +350,32 @@ def main(args):
     
     final_tsv_path = os.path.join(save_dir_path, "best_recommendations.tsv")
     
+    # Store the predicted matrix from the final evaluation
     if args.tst_w_val:
-        evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
+        _, predicted_matrix = evaluate(model, diffusion, test_twv_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
     else:
-        evaluate(model, diffusion, test_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
+        _, predicted_matrix = evaluate(model, diffusion, test_loader, test_y_data, r_topk_UU, f_topk_UU, f_train_data_A, mask_tv, eval(args.topN), n_user, n_item, f_n_user, args, write=True, write_path=final_tsv_path)
+    
     print(f"Recommendations saved in {final_tsv_path}")
         
     print('==='*18)
     print("End. Best Epoch {:03d} ".format(best_epoch))
     evaluate_utils.print_results(None, best_results, best_test_results)
     
-    # 종료 시간 출력
+    # Save matrices
+    base_filename = os.path.join(save_dir_path, f'matrices_{args.dataset.replace("/", "")}')
+    sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+    np.save(f'{base_filename}_predicted.npy', predicted_matrix)
+    print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
+    
+    # End time output
     end_time = datetime.now()
     print("End time:", end_time.strftime('%Y-%m-%d %H:%M:%S'))
     
     time_difference = end_time - code_start_time
     total_seconds = int(time_difference.total_seconds())
 
-    # 분과 초 변환
+    # Minutes and seconds
     minutes, seconds = divmod(total_seconds, 60)
 
 
