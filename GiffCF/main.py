@@ -2,6 +2,8 @@ import os
 import time
 import shutil
 import argparse
+import numpy as np
+import scipy.sparse as sp
 from pprint import pprint
 from tabulate import tabulate
 
@@ -85,6 +87,28 @@ def train(cfg):
         max_k = 100
         model.save_recommendations(test_ds, filepath=tsv_path, top_k=max_k)
 
+        # --- Matrix Saving Logic (Aligned with inference.py) ---
+        dataset_name_clean = cfg.dataset.name.replace("/", "")
+        base_filename = os.path.join(save_dir_path, f'matrices_{dataset_name_clean}')
+        
+        # Save original sparse matrix
+        sp.save_npz(f'{base_filename}_original.npz', x_train)
+        
+        # Compute and save predicted dense matrix
+        test_batch_size = getattr(cfg.model, 'test_batch_size', getattr(cfg.model, 'batch_size', 400))
+        batched_test_ds = test_ds.batch(test_batch_size)
+        
+        predicted_list = []
+        for x_history, _, _ in batched_test_ds:
+            preds = model(x_history, training=False)
+            predicted_list.append(preds.numpy())
+            
+        predicted_matrix = np.concatenate(predicted_list, axis=0)
+        np.save(f'{base_filename}_predicted.npy', predicted_matrix)
+        
+        print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
+        # -------------------------------------------------------
+
         with open(os.path.join(save_dir_path, 'results.txt'), 'w') as f:
             f.write(f'Training time: {elapsed_time:.2f} seconds\n')
             f.write(tabulate([(cfg.name, *test_res.values())], headers=test_res.keys()))
@@ -133,6 +157,24 @@ def evaluate(cfg):
         tsv_path = os.path.join(save_dir_path, 'best_recommendations.tsv')
         model.save_recommendations(test_ds, filepath=tsv_path, top_k=100)
         
+        dataset_name_clean = cfg.dataset.name.replace("/", "")
+        base_filename = os.path.join(save_dir_path, f'matrices_{dataset_name_clean}')
+        
+        sp.save_npz(f'{base_filename}_original.npz', x_train)
+        
+        test_batch_size = getattr(cfg.model, 'test_batch_size', getattr(cfg.model, 'batch_size', 400))
+        batched_test_ds = test_ds.batch(test_batch_size)
+        
+        predicted_list = []
+        for x_history, _, _ in batched_test_ds:
+            preds = model(x_history, training=False)
+            predicted_list.append(preds.numpy())
+            
+        predicted_matrix = np.concatenate(predicted_list, axis=0)
+        np.save(f'{base_filename}_predicted.npy', predicted_matrix)
+        
+        print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
+
         with open(os.path.join(save_dir_path, 'eval_results.txt'), 'w') as f:
             f.write(tabulate([(cfg.name, *test_res.values())], headers=test_res.keys()))
 
