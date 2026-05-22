@@ -223,8 +223,8 @@ def main(args):
         
         base_filename = os.path.join(args.save_path, f'matrices_{args.dataset.replace("/", "")}')
         
-        # Save original sparse matrix (using mask_tv which includes train + valid history)
-        sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+        # Save original sparse matrix
+        sp.save_npz(f'{base_filename}_original.npz', train_data)
         # Save dense predictions
         np.save(f'{base_filename}_predicted.npy', predicted_matrix)
         
@@ -364,7 +364,7 @@ def main(args):
     
     # Save matrices
     base_filename = os.path.join(save_dir_path, f'matrices_{args.dataset.replace("/", "")}')
-    sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+    sp.save_npz(f'{base_filename}_original.npz', train_data)
     np.save(f'{base_filename}_predicted.npy', predicted_matrix)
     print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
     
