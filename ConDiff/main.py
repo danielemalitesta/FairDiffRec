@@ -224,7 +224,7 @@ if EVALUATE_ONLY:
     # save matrices
     dataset_name_clean = args.dataset.replace("/", "")
     base_filename = os.path.join(model_dir if model_dir else '.', f'matrices_{dataset_name_clean}')
-    sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+    sp.save_npz(f'{base_filename}_original.npz', train_data)
     np.save(f'{base_filename}_predicted.npy', predicted_matrix)
     
     print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
@@ -303,7 +303,7 @@ if best_model_state_dict is not None:
     # save matrices
     dataset_name_clean = args.dataset.replace("/", "")
     base_filename = os.path.join(save_dir_path, f'matrices_{dataset_name_clean}')
-    sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+    sp.save_npz(f'{base_filename}_original.npz', train_data)
     np.save(f'{base_filename}_predicted.npy', predicted_matrix)
     
     print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
