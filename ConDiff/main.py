@@ -17,6 +17,7 @@ import torch.utils.data as data
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
+import scipy.sparse as sp
 
 import models.gaussian_diffusion as gd
 from models.DNN import DNN
@@ -125,10 +126,10 @@ param_num = mlp_num + diff_num
 print("Number of all parameters:", param_num)
 
 def calcRegLoss(model):
-	ret = 0
-	for W in model.parameters():
-		ret += W.norm(2).square()
-	return ret
+    ret = 0
+    for W in model.parameters():
+        ret += W.norm(2).square()
+    return ret
 
 def evaluate(data_loader, data_te, mask_his, topN, write=False, write_path=None):
     model.eval()
@@ -140,6 +141,9 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False, write_path=None)
     for i in range(e_N):
         target_items.append(data_te[i, :].nonzero()[1].tolist())
     
+    # Initialize continuous matrix to save model predictions
+    predicted_matrix = np.empty((e_N, train_data.shape[1]))
+    
     if write and write_path:
         tot_users = 0
         with open(write_path, 'w') as f:
@@ -148,6 +152,10 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False, write_path=None)
                     his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
                     batch = batch.to(device)
                     prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
+                    
+                    # Save original scores before masking
+                    predicted_matrix[tot_users:tot_users + batch.shape[0], :] = prediction.cpu().numpy()
+                    
                     prediction[his_data.nonzero()] = -np.inf
 
                     values, indices = torch.topk(prediction, topN[-1])
@@ -160,28 +168,73 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False, write_path=None)
                             f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
                         tot_users += 1
     else:
+        tot_users = 0
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
                 his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
                 batch = batch.to(device)
                 prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
+                
+                predicted_matrix[tot_users:tot_users + batch.shape[0], :] = prediction.cpu().numpy()
+                
                 prediction[his_data.nonzero()] = -np.inf
 
                 _, indices = torch.topk(prediction, topN[-1])
                 indices = indices.cpu().numpy().tolist()
                 predict_items.extend(indices)
+                
+                tot_users += batch.shape[0]
 
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
 
-    return test_results
+    return test_results, predicted_matrix
 
 best_recall, best_epoch = -100, 0
 best_test_result = None
 best_model_state_dict = None
 
+
+
+EVALUATE_ONLY = False  # Set to True to only run evaluation using a pre-trained model
+LOAD_PATH = "./saved_models/model.pth"  # Path to your .pth file
+
+if EVALUATE_ONLY:
+    import sys
+    print("\n--- EVALUATE ONLY MODE ---")
+    
+    # Load the weights into the model
+    model.load_state_dict(torch.load(LOAD_PATH, map_location=device))
+    model.to(device)
+    
+    # Unpack tuple to ignore the predicted_matrix during basic validation
+    valid_results, _ = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
+    
+    model_dir = os.path.dirname(LOAD_PATH)
+    eval_tsv_path = os.path.join(model_dir if model_dir else '.', "best_recommendations.tsv")
+    
+    if args.tst_w_val:
+        test_results, predicted_matrix = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=eval_tsv_path)
+    else:
+        test_results, predicted_matrix = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=eval_tsv_path)
+        
+    print("\n================ FINAL RESULTS ================")
+    evaluate_utils.print_results(None, valid_results, test_results)
+    print(f"Recommendations saved in: {eval_tsv_path}")
+    
+    # save matrices
+    dataset_name_clean = args.dataset.replace("/", "")
+    base_filename = os.path.join(model_dir if model_dir else '.', f'matrices_{dataset_name_clean}')
+    sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+    np.save(f'{base_filename}_predicted.npy', predicted_matrix)
+    
+    print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
+    print("===============================================\n")
+    sys.exit(0)
+
+
 print("Start training...")
 for epoch in range(1, args.epochs + 1):
-    if epoch - best_epoch >= 50:
+    if epoch - best_epoch >= 20:
         print('-'*18)
         print('Exiting from training early')
         break
@@ -203,11 +256,11 @@ for epoch in range(1, args.epochs + 1):
         optimizer.step()
     
     if epoch % 5 == 0:
-        valid_results = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
+        valid_results, _ = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
         if args.tst_w_val:
-            test_results = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
+            test_results, _ = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
         else:
-            test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN))
+            test_results, _ = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN))
         evaluate_utils.print_results(None, valid_results, test_results)
         
         if valid_results[1][1] > best_recall:
@@ -242,9 +295,17 @@ if best_model_state_dict is not None:
     final_tsv_path = os.path.join(save_dir_path, "best_recommendations.tsv")
     
     if args.tst_w_val:
-        evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=final_tsv_path)
+        _, predicted_matrix = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=final_tsv_path)
     else:
-        evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=final_tsv_path)
+        _, predicted_matrix = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True, write_path=final_tsv_path)
     print(f"Recommendations saved in: {final_tsv_path}")
+
+    # save matrices
+    dataset_name_clean = args.dataset.replace("/", "")
+    base_filename = os.path.join(save_dir_path, f'matrices_{dataset_name_clean}')
+    sp.save_npz(f'{base_filename}_original.npz', mask_tv)
+    np.save(f'{base_filename}_predicted.npy', predicted_matrix)
+    
+    print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
 
 print("End time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
