@@ -2,6 +2,7 @@
 Train a diffusion model for recommendation
 """
 
+from scipy.stats import wasserstein_distance
 import argparse
 from ast import parse
 import os
@@ -40,9 +41,9 @@ def seed_worker(worker_id):
     np.random.seed(worker_seed)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default='yelp_clean', help='choose the dataset')
-parser.add_argument('--data_path', type=str, default='./datasets/', help='load data path')
-parser.add_argument('--emb_path', type=str, default='./datasets/')
+parser.add_argument('--dataset', type=str, default='ml-1m', help='choose the dataset')
+parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
+parser.add_argument('--emb_path', type=str, default='../datasets/')
 parser.add_argument('--batch_size', type=int, default=400)
 parser.add_argument('--topN', type=str, default='[10, 20, 50, 100]')
 parser.add_argument('--tst_w_val', action='store_true', help='test with validation')
@@ -149,12 +150,12 @@ valid_path = args.data_path + 'valid_list.npy'
 test_path = args.data_path + 'test_list.npy'
 
 train_data, valid_y_data, test_y_data, n_user, n_item = data_utils.data_load(train_path, valid_path, test_path)
-train_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A))
+train_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.todense()))
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, pin_memory=True, shuffle=True, num_workers=4, worker_init_fn=worker_init_fn)
 test_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False)
 
 if args.tst_w_val:
-    tv_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A) + torch.FloatTensor(valid_y_data.A))
+    tv_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.todense()) + torch.FloatTensor(valid_y_data.todense()))
     test_twv_loader = DataLoader(tv_dataset, batch_size=args.batch_size, shuffle=False)
 mask_tv = train_data + valid_y_data
 
@@ -172,7 +173,7 @@ diffusion = gd.GaussianDiffusion(mean_type, args.noise_schedule, \
         args.noise_scale, args.noise_min, args.noise_max, args.steps, device).to(device)
 
 ### Build Autoencoder & MLP ###
-model_path = f"saved_models/{args.dataset}/"
+model_path = "saved_models/"
 if args.dataset == "amazon-book_clean":
     model_name = "amazon-book_clean_0.0005lr1_0.0001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.05_dims[300]_emb10_x0_steps5_scale0.5_min0.001_max0.005_sample0_reweight1_log.pth"
     AE_name = "amazon-book_clean_0.0005lr1_0.0001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.05_dims[300]_emb10_x0_steps5_scale0.5_min0.001_max0.005_sample0_reweight1_log_AE.pth"
@@ -198,8 +199,8 @@ elif args.dataset == 'ml-1m':
     model_name = 'ml-1m_0.001lr1_0.001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.01_dims[300]_emb10_x0_steps5_scale0.1_min0.0005_max0.01_sample0_reweightTrue_log.pth'
     AE_name = 'ml-1m_0.001lr1_0.001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.01_dims[300]_emb10_x0_steps5_scale0.1_min0.0005_max0.01_sample0_reweightTrue_log_AE.pth'
 
-model = torch.load(model_path + model_name).to(device)
-Autoencoder = torch.load(model_path + AE_name).to(device)
+model = torch.load(model_path + model_name, weights_only=False, map_location=device).to(device)
+Autoencoder = torch.load(model_path + AE_name, weights_only=False, map_location=device).to(device)
 
 def evaluate(data_loader, data_te, mask_his, topN, write=False):
     model.eval()
@@ -215,6 +216,8 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
     if args.n_cate > 1:
         category_map = Autoencoder.category_map.to(device)
 
+    predicted_matrix = np.empty(train_data.shape)
+
     if write:
         tot_users = 0
         with open(f'{model_path}{model_name.replace("pth", "tsv")}', 'a') as f:
@@ -228,7 +231,8 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
                     _, batch_latent, _ = Autoencoder.Encode(batch)
                     batch_latent_recon = diffusion.p_sample(model, batch_latent, args.sampling_steps, args.sampling_noise)
                     prediction = Autoencoder.Decode(batch_latent_recon)  # [batch_size, n1_items + n2_items + n3_items]
-        
+                    predicted_matrix[tot_users:tot_users + batch.shape[0], :] = prediction.cpu().numpy()
+
                     prediction[his_data.nonzero()] = -np.inf  # mask ui pairs in train & validation set
         
                     values, mapped_indices = torch.topk(prediction, topN[-1])  # topk category idx
@@ -246,6 +250,7 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
                             f.write(f'{tot_users}\t{item}\t{current_values[idx].item()}\n')
                         tot_users += 1
     else:
+        tot_users = 0
         with torch.no_grad():
             for batch_idx, batch in enumerate(data_loader):
                 batch = batch.to(device)
@@ -256,6 +261,7 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
                 _, batch_latent, _ = Autoencoder.Encode(batch)
                 batch_latent_recon = diffusion.p_sample(model, batch_latent, args.sampling_steps, args.sampling_noise)
                 prediction = Autoencoder.Decode(batch_latent_recon)  # [batch_size, n1_items + n2_items + n3_items]
+                predicted_matrix[tot_users:tot_users + batch.shape[0], :] = prediction.cpu().numpy()
     
                 prediction[his_data.nonzero()] = -np.inf  # mask ui pairs in train & validation set
     
@@ -268,10 +274,11 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
     
                 indices = indices.cpu().numpy().tolist()
                 predict_items.extend(indices)
+                tot_users += batch.shape[0]
 
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
 
-    return test_results
+    return test_results, predicted_matrix
 
 if args.n_cate > 1:
     start_time = time.time()
@@ -296,13 +303,20 @@ if args.n_cate > 1:
 else:
     mask_train = train_data
 
-valid_results = evaluate(test_loader, valid_y_data, mask_train, eval(args.topN))
+valid_results, _ = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
 if args.tst_w_val:
-    test_results = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
+    test_results, predicted_matrix = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
 else:
-    test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True)
+    test_results, predicted_matrix = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True)
+
 evaluate_utils.print_results(None, valid_results, test_results)
 
 
+dataset_name_clean = args.dataset.replace("/", "")
+base_filename = os.path.join(model_path, f'matrices_{dataset_name_clean}')
 
+# Save matrices
+sp.save_npz(f'{base_filename}_original.npz', train_data)
+np.save(f'{base_filename}_predicted.npy', predicted_matrix)
 
+print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy\n")
