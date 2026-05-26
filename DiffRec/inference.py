@@ -16,6 +16,7 @@ import torch.utils.data as data
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
+import scipy.sparse as sp
 
 import models.gaussian_diffusion as gd
 from models.DNN import DNN
@@ -37,7 +38,7 @@ def seed_worker(worker_id):
     np.random.seed(worker_seed)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default='foursquare_tky', help='choose the dataset')
+parser.add_argument('--dataset', type=str, default='ml-1m', help='choose the dataset')
 parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
 parser.add_argument('--batch_size', type=int, default=400)
 parser.add_argument('--topN', type=str, default='[10, 20, 50, 100]')
@@ -174,7 +175,7 @@ elif args.dataset == 'ml-1m':
 elif args.dataset == 'foursquare_tky':
     model_name = 'foursquare_tky_lr0.0001_wd0.0_bs400_dims[1000]_emb10_x0_steps40_scale0.005_min0.001_max0.01_sample0_reweightTrue_log.pth'
 
-model = torch.load(model_path + model_name).to(device)
+model = torch.load(model_path + model_name, weights_only=False).to(device)
 
 print("models ready.")
 
@@ -188,14 +189,21 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
     for i in range(e_N):
         target_items.append(data_te[i, :].nonzero()[1].tolist())
 
+
+    predicted_matrix = np.empty((e_N, train_data.shape[1]))
+    tot_users = 0
+
     if write:
-        tot_users = 0
         with open(f'{model_path}{model_name.replace("pth", "tsv")}', 'a') as f:
             with torch.no_grad():
                 for batch_idx, batch in enumerate(data_loader):
                     his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
                     batch = batch.to(device)
                     prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
+                    
+                    # Saving original scores
+                    predicted_matrix[tot_users:tot_users + batch.shape[0], :] = prediction.cpu().numpy()
+                    
                     prediction[his_data.nonzero()] = -np.inf
     
                     values, indices = torch.topk(prediction, topN[-1])
@@ -212,6 +220,10 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
                 his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
                 batch = batch.to(device)
                 prediction = diffusion.p_sample(model, batch, args.sampling_steps, args.sampling_noise)
+                
+                predicted_matrix[tot_users:tot_users + batch.shape[0], :] = prediction.cpu().numpy()
+                tot_users += batch.shape[0]
+                
                 prediction[his_data.nonzero()] = -np.inf
 
                 _, indices = torch.topk(prediction, topN[-1])
@@ -220,17 +232,23 @@ def evaluate(data_loader, data_te, mask_his, topN, write=False):
 
     test_results = evaluate_utils.computeTopNAccuracy(target_items, predict_items, topN)
 
-    return test_results
+    return test_results, predicted_matrix
 
-valid_results = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
+
+valid_results, _ = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
 if args.tst_w_val:
-    test_results = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
+    test_results, predicted_matrix = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
 else:
-    test_results = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True)
+    test_results, predicted_matrix = evaluate(test_loader, test_y_data, mask_tv, eval(args.topN), write=True)
+
 evaluate_utils.print_results(None, valid_results, test_results)
 
+original_matrix = train_data
 
+base_filename = f'{model_path}matrices_{args.dataset.replace("/", "")}'
 
+sp.save_npz(f'{base_filename}_original.npz', original_matrix)
 
+np.save(f'{base_filename}_predicted.npy', predicted_matrix)
 
-
+print(f"Matrices saved in:\n- {base_filename}_original.npz\n- {base_filename}_predicted.npy")
