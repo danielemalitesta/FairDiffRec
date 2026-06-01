@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.sparse as sp
 from scipy.stats import wasserstein_distance
+import scipy.sparse.csgraph as csgraph
+from scipy.sparse.linalg import svds
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -101,3 +103,60 @@ print('\n=== Clustering Metrics ===')
 print(f"Wasserstein Clust User: {wd_user_clust:.2f} | Item: {wd_item_clust:.2f}")
 print(f'Orig. Users: {np.array(clust_user_orig).mean():.2f}+-{np.array(clust_user_orig).std():.2f} | Items: {np.array(clust_item_orig).mean():.2f}+-{np.array(clust_item_orig).std():.2f}')
 print(f'Gen.  Users: {np.array(clust_user_gen).mean():.2f}+-{np.array(clust_user_gen).std():.2f} | Items: {np.array(clust_item_gen).mean():.2f}+-{np.array(clust_item_gen).std():.2f}')
+
+
+
+# Singular Value Spectrum (SVD - Global Structure)
+k_svd = min(20, train_data.shape[0] - 2, train_data.shape[1] - 2)
+sv_orig = np.sort(svds(train_data.astype(float), k=k_svd, return_singular_vectors=False))
+sv_gen = np.sort(svds(sp.csr_matrix(generated_matrix.astype(float)), k=k_svd, return_singular_vectors=False))
+wd_spectral = wasserstein_distance(sv_orig, sv_gen)
+print(f"Wasserstein Spectral (SVD): {wd_spectral:.2f}")
+
+
+# Degree Assortativity (Topology Pairing)
+u_idx_o, i_idx_o = np.where(train_data_dense > 0)
+assort_orig = np.corrcoef(original_user_degree[u_idx_o], original_item_degree[i_idx_o])[0, 1]
+
+u_idx_g, i_idx_g = np.where(generated_matrix > 0)
+assort_gen = np.corrcoef(generated_user_degree[u_idx_g], generated_item_degree[i_idx_g])[0, 1]
+
+assort_orig = np.nan_to_num(assort_orig)
+assort_gen = np.nan_to_num(assort_gen)
+print(f"Degree Assortativity Orig:  {assort_orig:.3f} | Gen: {assort_gen:.3f} (Diff: {abs(assort_orig - assort_gen):.3f})")
+
+
+# Connected Components (Network Fragmentation)
+def count_components(adj_matrix):
+    rows, cols = adj_matrix.shape
+    bipartite_adj = sp.bmat([[None, adj_matrix], [adj_matrix.T, None]])
+    n_components, _ = csgraph.connected_components(bipartite_adj, directed=False)
+    return n_components
+
+comp_orig = count_components(train_data)
+comp_gen = count_components(sp.csr_matrix(generated_matrix))
+print(f"Connected Components Orig:  {comp_orig} | Gen: {comp_gen} (Diff: {abs(comp_orig - comp_gen)})")
+
+
+# Gini Coefficient on Degrees (Inequality / Popularity Bias)
+def gini_coefficient(array):
+    array = np.sort(array.astype(float))
+    if array.sum() == 0: return 0.0
+    n = array.shape[0]
+    index = np.arange(1, n + 1)
+    return ((np.sum((2 * index - n  - 1) * array)) / (n * np.sum(array)))
+
+gini_u_orig, gini_i_orig = gini_coefficient(original_user_degree), gini_coefficient(original_item_degree)
+gini_u_gen, gini_i_gen = gini_coefficient(generated_user_degree), gini_coefficient(generated_item_degree)
+
+print(f"Gini Users Orig: {gini_u_orig:.3f} | Gen: {gini_u_gen:.3f} (Diff: {abs(gini_u_orig - gini_u_gen):.3f})")
+print(f"Gini Items Orig: {gini_i_orig:.3f} | Gen: {gini_i_gen:.3f} (Diff: {abs(gini_i_orig - gini_i_gen):.3f})")
+
+
+# Edge Overlap (Jaccard on adjacency matrices)
+intersection = np.logical_and(train_data_dense > 0, generated_matrix > 0).sum()
+union = np.logical_or(train_data_dense > 0, generated_matrix > 0).sum()
+
+edge_overlap = intersection / union if union > 0 else 0.0
+
+print(f"Edge Overlap (Jaccard Index): {edge_overlap:.4f}")
