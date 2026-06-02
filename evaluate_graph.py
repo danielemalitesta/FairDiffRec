@@ -111,6 +111,7 @@ k_svd = min(20, train_data.shape[0] - 2, train_data.shape[1] - 2)
 sv_orig = np.sort(svds(train_data.astype(float), k=k_svd, return_singular_vectors=False))
 sv_gen = np.sort(svds(sp.csr_matrix(generated_matrix.astype(float)), k=k_svd, return_singular_vectors=False))
 wd_spectral = wasserstein_distance(sv_orig, sv_gen)
+print('\n=== Other Metrics ===')
 print(f"Wasserstein Spectral (SVD): {wd_spectral:.2f}")
 
 
