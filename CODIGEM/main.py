@@ -7,52 +7,38 @@ import ddgm_model_rs as dg
 import os
 from scipy import sparse
 from data_processing import DataLoader
+import data_utils
 
-# Directories and Paths
+data_path = "../datasets/"
+dataset_name = "ml-1m" 
+final_results_dir = "results/" 
 
-path = "PATH TO DATASET" # Path to the dataset
+train_path = os.path.join(data_path, dataset_name, 'train_list.npy')
+valid_path = os.path.join(data_path, dataset_name, 'valid_list.npy')
+test_path = os.path.join(data_path, dataset_name, 'test_list.npy')
 
-final_results_dir = "PATH TO SAVE MODEL RESULTS" # Directory to save the model results
-
-pro_dir = os.path.join(path, 'pro_sg')
-
-# General Parameters
-dataset_name = "ml-20m" # Name of the dataset
-
-# Load the data
-if os.path.exists(pro_dir):
-        print("Data Already Preprocessed")
-        loader = DataLoader(path)
-        n_items = loader.load_n_items()
-        train_data = loader.load_data('train')
-        vad_data_tr, vad_data_te = loader.load_data('validation')
-        test_data_tr, test_data_te = loader.load_data('test')
-
-else:
-    print("Data Not Preprocessed")
-    print("Preprocessing Data")
-    os.system('python data_processing.py')
-    loader = DataLoader(path)
-    n_items = loader.load_n_items()
-    train_data = loader.load_data('train')
-    vad_data_tr, vad_data_te = loader.load_data('validation')
-    test_data_tr, test_data_te = loader.load_data('test')
-
+train_data, valid_y_data, test_y_data, n_users, n_items = data_utils.data_load(train_path, valid_path, test_path)
+vad_data_tr = train_data
+vad_data_te = valid_y_data
+test_data_tr = train_data + valid_y_data
+test_data_te = test_y_data
 
 # Parameters related to the model
+num = train_data.shape[0] 
+D = n_items                
 
 num = train_data.shape[0]  # number of rows in the dataframe
 
 D = n_items   # input dimension
 
-M = 200  # the number of neurons in scale (s) and translation (t) nets
+M = 1000  # the number of neurons in scale (s) and translation (t) nets
 
 T = 3  # hyperparater to tune
 
 beta = 0.0001  # hyperparater to tune #Beta = 0.0001 is best so far
 
 lr = 1e-3  # learning rate
-num_epochs = 100  # max. number of epochs
+num_epochs = 200  # max. number of epochs
 max_patience = 10  # an early stopping is used, if training doesn't improve for longer than 10 epochs, it is stopped
 patience = 0
 nll_val_list = []
@@ -111,7 +97,7 @@ for e in range(num_epochs):
     print('| Results of training | Val loss {:4.4f} | n20 {:4.4f}| n50 {:4.4f}| n100 {:4.4f} | r20 {:4.4f} | '
             'r50 {:4.4f} | r100 {:4.4f} |'.format(val_loss, n20,  n50, n100, r20, r50, r100))
 
-    metric_set = r50
+    metric_set = r20
     if e == 0:
         best_metric = metric_set
         print('saved!')
@@ -129,7 +115,6 @@ for e in range(num_epochs):
 
             final_results.update({'EpochofResults': e+1, 'val_loss': val_loss,
                                     'n20': n20, 'n50': n50, 'n100': n100, 'r20': r20, 'r50': r50, 'r100': r100})
-            # print(final_results)
             patience = 0
 
         else:
@@ -163,3 +148,50 @@ print('=' * 154)
 print('| End of training | Validation loss {:4.4f} | Test loss {:4.4f} | n20 {:4.4f}| n50 {:4.4f}| n100 {:4.4f} | r20 {:4.4f} | '
         'r50 {:4.4f} | r100 {:4.4f} |'.format(final_results['val_loss'], final_results['test_loss'], final_results['n20'], final_results['n50'], final_results['n100'], final_results['r20'], final_results['r50'], final_results['r100']))
 print('=' * 154)
+
+
+model.eval()
+
+N = test_data_tr.shape[0]
+D_items = test_data_tr.shape[1]
+predicted_matrix = np.empty((N, D_items))
+
+batch_size = 200
+topN_val = 100 
+
+dataset_name_clean = dataset_name.replace("/", "")
+tsv_path = os.path.join(quick_dir, "best_recommendations.tsv")
+base_filename = os.path.join(quick_dir, f"matrices_{dataset_name_clean}")
+
+with open(tsv_path, 'w') as f:
+    with torch.no_grad():
+        for b in range(0, N, batch_size):
+            end = min(b + batch_size, N)
+            
+            batch_data = test_data_tr[b:end]
+            batch_tensor = dg.naive_sparse2tensor(batch_data).to(device)
+            _, prediction = model.forward(batch_tensor, anneal=1.0)
+            predicted_matrix[b:end, :] = prediction.cpu().numpy()
+            prediction_cpu = prediction.cpu().numpy()
+            prediction_cpu[batch_data.nonzero()] = -np.inf
+            prediction_masked = torch.FloatTensor(prediction_cpu).to(device)
+            values, indices = torch.topk(prediction_masked, topN_val)
+            
+            values = values.cpu().numpy()
+            indices = indices.cpu().numpy()
+            
+            for user_idx_in_batch in range(end - b):
+                global_user_idx = b + user_idx_in_batch
+                user_items = indices[user_idx_in_batch]
+                user_values = values[user_idx_in_batch]
+                for idx, item in enumerate(user_items):
+                    f.write(f'{global_user_idx}\t{item}\t{user_values[idx]}\n')
+
+# Saving original matrix
+sparse.save_npz(f'{base_filename}_original.npz', train_data)
+
+# Saving predicted matrix
+np.save(f'{base_filename}_predicted.npy', predicted_matrix)
+
+print(f"Recommendations saved in: {tsv_path}")
+print(f"Matrices saved in:\n- {base_filename}_original.npz \n- {base_filename}_predicted.npy")
