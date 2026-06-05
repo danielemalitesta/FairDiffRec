@@ -126,18 +126,28 @@ assort_orig = np.nan_to_num(assort_orig)
 assort_gen = np.nan_to_num(assort_gen)
 print(f"Degree Assortativity Orig:  {assort_orig:.3f} | Gen: {assort_gen:.3f} (Diff: {abs(assort_orig - assort_gen):.3f})")
 
+# Shortest Path (Geodesic) Metrics
+U, I = train_data.shape
+adj_orig = sp.bmat([[None, train_data], [train_data.T, None]], format='csr')
 
-# Connected Components (Network Fragmentation)
-def count_components(adj_matrix):
-    rows, cols = adj_matrix.shape
-    bipartite_adj = sp.bmat([[None, adj_matrix], [adj_matrix.T, None]])
-    n_components, _ = csgraph.connected_components(bipartite_adj, directed=False)
-    return n_components
+adj_gen_sparse = sp.csr_matrix(generated_matrix)
+adj_gen = sp.bmat([[None, adj_gen_sparse], [adj_gen_sparse.T, None]], format='csr')
 
-comp_orig = count_components(train_data)
-comp_gen = count_components(sp.csr_matrix(generated_matrix))
-print(f"Connected Components Orig:  {comp_orig} | Gen: {comp_gen} (Diff: {abs(comp_orig - comp_gen)})")
+num_samples = min(U + I, 500)
+np.random.seed(42)
+sampled_indices = np.random.choice(U + I, size=num_samples, replace=False)
 
+dist_orig = csgraph.shortest_path(adj_orig, directed=False, unweighted=True, indices=sampled_indices)
+dist_gen = csgraph.shortest_path(adj_gen, directed=False, unweighted=True, indices=sampled_indices)
+
+dist_orig_flat = dist_orig[np.isfinite(dist_orig) & (dist_orig > 0)]
+dist_gen_flat = dist_gen[np.isfinite(dist_gen) & (dist_gen > 0)]
+
+if len(dist_orig_flat) > 0 and len(dist_gen_flat) > 0:
+    wd_path = wasserstein_distance(dist_orig_flat, dist_gen_flat)
+    print('\n=== Shortest Path (Geodesic) Metrics ===')
+    print(f"Wasserstein Shortest Path: {wd_path:.2f}")
+    print(f"Orig. Avg Path Length: {dist_orig_flat.mean():.3f} | Gen. Avg Path Length: {dist_gen_flat.mean():.3f}")
 
 # Gini Coefficient on Degrees (Inequality / Popularity Bias)
 def gini_coefficient(array):
