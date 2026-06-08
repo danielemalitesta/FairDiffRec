@@ -55,7 +55,7 @@ parser.add_argument('--emb_size', type=int, default=10, help='timestep embedding
 parser.add_argument('--mean_type', type=str, default='x0', help='MeanType for diffusion: x0, eps')
 parser.add_argument('--steps', type=int, default=20, help='diffusion steps')
 parser.add_argument('--noise_schedule', type=str, default='linear-var', help='the schedule for noise generating')
-parser.add_argument('--noise_scale', type=float, default=0.01, help='noise scale for noise generating')
+parser.add_argument('--noise_scale', type=float, default=0.001, help='noise scale for noise generating')
 parser.add_argument('--noise_min', type=float, default=0.001, help='noise lower bound for noise generating')
 parser.add_argument('--noise_max', type=float, default=0.01, help='noise upper bound for noise generating')
 parser.add_argument('--sampling_noise', type=bool, default=False, help='sampling with noise or not')
