@@ -65,13 +65,13 @@ elif args.dataset == 'yelp2018':
     args.n_hops = 2
 elif args.dataset == 'ml-1m':
     args.steps = 20
-    args.noise_scale = 0.01
+    args.noise_scale = 0.001
     args.noise_min = 0.001
     args.noise_max = 0.01
     args.n_hops = 2
 elif args.dataset == 'foursquare_tky':
     args.steps = 20
-    args.noise_scale = 0.01
+    args.noise_scale = 0.001
     args.noise_min = 0.001
     args.noise_max = 0.01
     args.n_hops = 2
