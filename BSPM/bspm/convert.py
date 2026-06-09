@@ -9,7 +9,7 @@ def convert_npy_to_txt(npy_filename, txt_filename):
     txt_path = os.path.join(dataset_dir, txt_filename)
     
     if not os.path.exists(npy_path):
-        print(f"⚠️ File not found: {npy_path} (Skipping...)")
+        print(f" File not found: {npy_path} (Skipping...)")
         return
         
     data = np.load(npy_path, allow_pickle=True)
@@ -42,7 +42,7 @@ def convert_npy_to_txt(npy_filename, txt_filename):
                 if items is not None and len(items) > 0:
                     f.write(f"{u} {' '.join(map(str, items))}\n")
                     
-    print(f"✅ Successfully created: {txt_filename}")
+    print(f" Successfully created: {txt_filename}")
 
 convert_npy_to_txt('train_list.npy', 'train.txt')
 convert_npy_to_txt('valid_list.npy', 'valid.txt')
