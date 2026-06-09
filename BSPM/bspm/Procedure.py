@@ -5,14 +5,11 @@ import utils
 import dataloader
 from pprint import pprint
 from utils import timer
-# from time import time
 import time
 import model
 import multiprocessing
 
-
 CORES = multiprocessing.cpu_count() // 2
-
 
 def BPR_train_original(dataset, recommend_model, loss_class, epoch, neg_k=1, w=None):
     Recmodel = recommend_model
@@ -47,7 +44,6 @@ def BPR_train_original(dataset, recommend_model, loss_class, epoch, neg_k=1, w=N
     timer.zero()
     return f"loss{aver_loss:.3f}-{time_info}"
     
-    
 def test_one_batch(X):
     sorted_items = X[0].numpy()
     groundTrue = X[1]
@@ -61,14 +57,15 @@ def test_one_batch(X):
     return {'recall':np.array(recall), 
             'precision':np.array(pre), 
             'ndcg':np.array(ndcg)}
-        
             
-def Test(dataset, Recmodel, epoch, w=None, multicore=0):
+def Test(dataset, Recmodel, epoch, w=None, multicore=0, write=False, write_path=None, test_dict=None, mode='test'):
     u_batch_size = world.config['test_u_batch_size']
     dataset: utils.BasicDataset
-    testDict: dict = dataset.testDict
+    
+    testDict: dict = test_dict if test_dict is not None else dataset.testDict
     Recmodel: model.LightGCN
     adj_mat = dataset.UserItemNet.tolil()
+    
     if(world.simple_model == 'lgn-ide'):
         lm = model.LGCN_IDE(adj_mat)
         lm.train()
@@ -81,38 +78,42 @@ def Test(dataset, Recmodel, epoch, w=None, multicore=0):
     elif(world.simple_model == 'bspm-torch'):
         lm = model.BSPM_TORCH(adj_mat, world.config)
         lm.train()
-    # eval mode with no dropout
+        
     Recmodel = Recmodel.eval()
     max_K = max(world.topks)
     if multicore == 1:
         pool = multiprocessing.Pool(CORES)
+        
     results = {'precision': np.zeros(len(world.topks)),
                'recall': np.zeros(len(world.topks)),
                'ndcg': np.zeros(len(world.topks))}
+               
+    users = list(testDict.keys())
+    e_N = len(users)
+    
+    predicted_matrix = np.empty((e_N, dataset.m_items))
+    f = open(write_path, 'w') if (write and write_path) else None
+    tot_users = 0
+
     with torch.no_grad():
-        users = list(testDict.keys())
         try:
             assert u_batch_size <= len(users) / 10
         except AssertionError:
             print(f"test_u_batch_size is too big for this dataset, try a small one {len(users) // 10}")
+            
         users_list = []
         rating_list = []
         groundTrue_list = []
-
         total_batch = len(users) // u_batch_size + 1
-        start = time.time()
-        total_time = 0
+        
         for batch_users in utils.minibatch(users, batch_size=u_batch_size):
-            starter, ender = torch.cuda.Event(enable_timing=True),   torch.cuda.Event(enable_timing=True)
-            starter.record()        
             allPos = dataset.getUserPosItems(batch_users)
             groundTrue = [testDict[u] for u in batch_users]
-            batch_users_gpu = torch.Tensor(batch_users).long()
-            batch_users_gpu = batch_users_gpu.to(world.device)
+            batch_users_gpu = torch.Tensor(batch_users).long().to(world.device)
+            
             if(world.simple_model in ['gf-cf','bspm']):
                 rating = lm.getUsersRating(batch_users, world.dataset)
-                rating = torch.from_numpy(rating)
-                rating = rating.to(world.device)
+                rating = torch.from_numpy(rating).to(world.device)
             elif(world.simple_model == 'bspm-torch'):
                 if not torch.is_tensor(adj_mat):
                     adj_mat = convert_sp_mat_to_sp_tensor(adj_mat).to_dense()
@@ -120,29 +121,40 @@ def Test(dataset, Recmodel, epoch, w=None, multicore=0):
                 rating = lm.getUsersRating(batch_ratings, world.dataset)
             else:
                 rating = Recmodel.getUsersRating(batch_users_gpu)
-            ender.record()
-            torch.cuda.synchronize()
-            curr_time = starter.elapsed_time(ender)/1000
-            total_time += curr_time
+            
+            predicted_matrix[tot_users:tot_users + rating.shape[0], :] = rating.cpu().numpy()
+            
             exclude_index = []
             exclude_items = []
             for range_i, items in enumerate(allPos):
                 exclude_index.extend([range_i] * len(items))
                 exclude_items.extend(items)
+                
+                if mode == 'test' and hasattr(dataset, 'validDict'):
+                    uid = batch_users[range_i]
+                    if uid in dataset.validDict:
+                        val_items = dataset.validDict[uid]
+                        exclude_index.extend([range_i] * len(val_items))
+                        exclude_items.extend(val_items)
+                        
             rating[exclude_index, exclude_items] = -(1<<10)
-            _, rating_K = torch.topk(rating, k=max_K)
-            rating = rating.cpu().numpy()
-
-            del rating
+            
+            values, rating_K = torch.topk(rating, k=max_K)
+            indices = rating_K.cpu().numpy().tolist()
+            
+            if f is not None:
+                values_np = values.cpu().numpy()
+                for u_idx, original_user_id in enumerate(batch_users):
+                    current_values = values_np[u_idx]
+                    for idx, item in enumerate(indices[u_idx]):
+                        f.write(f'{original_user_id}\t{item}\t{current_values[idx].item()}\n')
+            
             users_list.append(batch_users)
             rating_list.append(rating_K.cpu())
             groundTrue_list.append(groundTrue)
+            tot_users += rating.shape[0]
+            
         assert total_batch == len(users_list)
-        end = time.time()
-        print_time = False
-        if print_time == True:
-            print('inference time: ', end-start)
-            print('inference time(CUDA): ', total_time)
         X = zip(rating_list, groundTrue_list)
 
         if multicore == 1:
@@ -151,24 +163,29 @@ def Test(dataset, Recmodel, epoch, w=None, multicore=0):
             pre_results = []
             for x in X:
                 pre_results.append(test_one_batch(x))
+                
         for result in pre_results:
             results['recall'] += result['recall']
             results['precision'] += result['precision']
             results['ndcg'] += result['ndcg']
+            
         results['recall'] /= float(len(users))
         results['precision'] /= float(len(users))
         results['ndcg'] /= float(len(users))
+        
         if world.tensorboard:
-            w.add_scalars(f'Test/Recall@{world.topks}',
-                          {str(world.topks[i]): results['recall'][i] for i in range(len(world.topks))}, epoch)
-            w.add_scalars(f'Test/Precision@{world.topks}',
-                          {str(world.topks[i]): results['precision'][i] for i in range(len(world.topks))}, epoch)
-            w.add_scalars(f'Test/NDCG@{world.topks}',
-                          {str(world.topks[i]): results['ndcg'][i] for i in range(len(world.topks))}, epoch)
+            w.add_scalars(f'{mode.capitalize()}/Recall@{world.topks}', {str(world.topks[i]): results['recall'][i] for i in range(len(world.topks))}, epoch)
+            w.add_scalars(f'{mode.capitalize()}/Precision@{world.topks}', {str(world.topks[i]): results['precision'][i] for i in range(len(world.topks))}, epoch)
+            w.add_scalars(f'{mode.capitalize()}/NDCG@{world.topks}', {str(world.topks[i]): results['ndcg'][i] for i in range(len(world.topks))}, epoch)
+            
         if multicore == 1:
             pool.close()
-        print(results)
-        return results
+            
+    if f is not None:
+        f.close()
+        
+    print(f"[{mode.upper()}] results: {results}")
+    return results, predicted_matrix
 
 def convert_sp_mat_to_sp_tensor(X):
     coo = X.tocoo().astype(np.float32)
