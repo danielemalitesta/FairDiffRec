@@ -24,7 +24,6 @@ if not os.path.exists(FILE_PATH):
 config = {}
 all_dataset = ['gowalla','yelp2018','amazon-book']
 all_models  = ['mf', 'lgn']
-# config['batch_size'] = 4096
 config['bpr_batch_size'] = args.bpr_batch
 config['latent_dim_rec'] = args.recdim
 config['lightGCN_n_layers']= args.layer
@@ -67,8 +66,6 @@ config['dataset'] = args.dataset
 dataset = args.dataset
 simple_model = args.simple_model
 model_name = args.model
-if dataset not in all_dataset:
-    raise NotImplementedError(f"Haven't supported {dataset} yet!, try {all_dataset}")
 if model_name not in all_models:
     raise NotImplementedError(f"Haven't supported {model_name} yet!, try {all_models}")
 
@@ -81,14 +78,13 @@ PATH = args.path
 topks = eval(args.topks)
 tensorboard = args.tensorboard
 comment = args.comment
-# let pandas shut up
 from warnings import simplefilter
 simplefilter(action="ignore", category=FutureWarning)
 
 
 
 def cprint(words : str):
-    print(f"\033[0;30;43m{words}\033[0m")
+    print(f"\033;30;43m{words}\033[0m")
 
 logo = r"""
 ██████╗ ███████╗██████╗ ███╗   ███╗
@@ -98,6 +94,4 @@ logo = r"""
 ██████╔╝███████║██║     ██║ ╚═╝ ██║
 ╚═════╝ ╚══════╝╚═╝     ╚═╝     ╚═╝
 """
-# font: ANSI Shadow
-# refer to http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=BSPM
 print(logo)
