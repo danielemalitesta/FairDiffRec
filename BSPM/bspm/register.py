@@ -1,4 +1,4 @@
-mport world
+import world
 import dataloader
 import model
 import utils
