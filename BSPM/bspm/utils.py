@@ -55,11 +55,6 @@ def UniformSample_original(dataset, neg_ratio = 1):
     return S
 
 def UniformSample_original_python(dataset):
-    """
-    the original impliment of BPR Sampling in LightGCN
-    :return:
-        np.array
-    """
     total_start = time()
     dataset : BasicDataset
     user_num = dataset.trainDataSize
@@ -88,8 +83,6 @@ def UniformSample_original_python(dataset):
     total = time() - total_start
     return np.array(S)
 
-# ===================end samplers==========================
-# =====================utils====================================
 
 def set_seed(seed):
     np.random.seed(seed)
@@ -141,14 +134,8 @@ def shuffle(*arrays, **kwargs):
 
 
 class timer:
-    """
-    Time context manager for code block
-        with timer():
-            do something
-        timer.get()
-    """
     from time import time
-    TAPE = [-1]  # global time record
+    TAPE = [-1]  
     NAMED_TAPE = {}
 
     @staticmethod
@@ -185,7 +172,6 @@ class timer:
                 kwargs['name']] if timer.NAMED_TAPE.get(kwargs['name']) else 0.
             self.named = kwargs['name']
             if kwargs.get("group"):
-                #TODO: add group function
                 pass
         else:
             self.named = False
@@ -202,14 +188,7 @@ class timer:
             self.tape.append(timer.time() - self.start)
 
 
-# ====================Metrics==============================
-# =========================================================
 def RecallPrecision_ATk(test_data, r, k):
-    """
-    test_data should be a list? cause users may have different amount of pos items. shape (test_batch, k)
-    pred_data : shape (test_batch, k) NOTE: pred_data should be pre-sorted
-    k : top-k
-    """
     right_pred = r[:, :k].sum(1)
     precis_n = k
     recall_n = np.array([len(test_data[i]) for i in range(len(test_data))])
@@ -219,9 +198,6 @@ def RecallPrecision_ATk(test_data, r, k):
 
 
 def MRRatK_r(r, k):
-    """
-    Mean Reciprocal Rank
-    """
     pred_data = r[:, :k]
     scores = np.log2(1./np.arange(1, k+1))
     pred_data = pred_data/scores
@@ -229,10 +205,6 @@ def MRRatK_r(r, k):
     return np.sum(pred_data)
 
 def NDCGatK_r(test_data,r,k):
-    """
-    Normalized Discounted Cumulative Gain
-    rel_i = 1 or 0, so 2^{rel_i} - 1 = 1 or 0
-    """
     assert len(r) == len(test_data)
     pred_data = r[:, :k]
 
@@ -250,9 +222,6 @@ def NDCGatK_r(test_data,r,k):
     return np.sum(ndcg)
 
 def AUC(all_item_scores, dataset, test_data):
-    """
-        design for a single user
-    """
     dataset : BasicDataset
     r_all = np.zeros((dataset.m_items, ))
     r_all[test_data] = 1
@@ -269,6 +238,3 @@ def getLabel(test_data, pred_data):
         pred = np.array(pred).astype("float")
         r.append(pred)
     return np.array(r).astype('float')
-
-# ====================end Metrics=============================
-# =========================================================
