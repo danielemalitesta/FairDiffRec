@@ -42,7 +42,7 @@ def seed_worker(worker_id):
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='yelp_clean', help='choose the dataset')
 parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
-parser.add_argument('--emb_path', type=str, default='../datasets/')
+parser.add_argument('--emb_path', type=str, default='embeddings/')
 parser.add_argument('--lr1', type=float, default=0.0001, help='learning rate for Autoencoder')
 parser.add_argument('--lr2', type=float, default=0.0001, help='learning rate for MLP')
 parser.add_argument('--wd1', type=float, default=0.0, help='weight decay for Autoencoder')
@@ -86,7 +86,7 @@ parser.add_argument('--noise_scale', type=float, default=0.1, help='noise scale 
 parser.add_argument('--noise_min', type=float, default=0.0001)
 parser.add_argument('--noise_max', type=float, default=0.02)
 parser.add_argument('--sampling_noise', type=bool, default=False, help='sampling with noise or not')
-parser.add_argument('--sampling_steps', type=int, default=10, help='steps for sampling/denoising')
+parser.add_argument('--sampling_steps', type=int, default=0, help='steps for sampling/denoising')
 parser.add_argument('--reweight', type=bool, default=True, help='assign different weight to different timestep or not')
 
 args = parser.parse_args()
@@ -98,9 +98,9 @@ device = torch.device("cuda:0" if args.cuda else "cpu")
 print("Starting time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 
 ### DATA LOAD ###
-train_path = args.data_path + args.dataset + 'train_list.npy'
-valid_path = args.data_path + args.dataset + 'valid_list.npy'
-test_path = args.data_path + args.dataset + 'test_list.npy'
+train_path = args.data_path + args.dataset + '/train_list.npy'
+valid_path = args.data_path + args.dataset + '/valid_list.npy'
+test_path = args.data_path + args.dataset + '/test_list.npy'
 
 train_data, valid_y_data, test_y_data, n_user, n_item = data_utils.data_load(train_path, valid_path, test_path)
 train_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A))
@@ -115,7 +115,7 @@ mask_tv = train_data + valid_y_data
 print('data ready.')
 
 ### Build Autoencoder ###
-emb_path = args.emb_path + args.dataset + '/item_emb.npy'
+emb_path = args.emb_path + f'/item_emb_{args.dataset}.npy'
 item_emb = torch.from_numpy(np.load(emb_path, allow_pickle=True))
 assert len(item_emb) == n_item
 out_dims = eval(args.out_dims)
