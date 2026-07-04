@@ -43,7 +43,7 @@ def seed_worker(worker_id):
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='ml-1m', help='choose the dataset')
 parser.add_argument('--data_path', type=str, default='../datasets/', help='load data path')
-parser.add_argument('--emb_path', type=str, default='../datasets/')
+parser.add_argument('--emb_path', type=str, default='embeddings/')
 parser.add_argument('--batch_size', type=int, default=400)
 parser.add_argument('--topN', type=str, default='[10, 20, 50, 100]')
 parser.add_argument('--tst_w_val', action='store_true', help='test with validation')
@@ -65,7 +65,6 @@ parser.add_argument('--sampling_steps', type=int, default=0, help='steps for sam
 args = parser.parse_args()
 
 args.data_path = args.data_path + args.dataset + '/'
-args.emb_path = args.emb_path + args.dataset + '/'
 if args.dataset == 'amazon-book_clean':
     args.steps = 5
     args.noise_scale = 0.5
