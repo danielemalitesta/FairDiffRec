@@ -133,6 +133,44 @@ elif args.dataset == 'foursquare_tky':
     args.steps=2
     args.wd1=0.0
     args.wd2=0.0
+elif args.dataset == 'books':
+    args.batch_size=400 
+    args.emb_size=10 
+    args.in_dims='[300]'
+    args.out_dims='[]'
+    args.lamda=0.03
+    args.lr1=0.001
+    args.lr2=0.001
+    args.mean_type='x0'
+    args.mlp_dims='[300]'
+    args.n_cate=2
+    args.noise_max=0.01
+    args.noise_min=0.005
+    args.noise_scale=0.005
+    args.reweight=True
+    args.sampling_steps=0
+    args.steps=10
+    args.wd1=0.0
+    args.wd2=0.0
+elif args.dataset == 'lastfm':
+    args.batch_size=400 
+    args.emb_size=10 
+    args.in_dims='[300]'
+    args.out_dims='[]'
+    args.lamda=0.03
+    args.lr1=0.01
+    args.lr2=0.01
+    args.mean_type='x0'
+    args.mlp_dims='[300]'
+    args.n_cate=2
+    args.noise_max=0.01
+    args.noise_min=0.005
+    args.noise_scale=0.1
+    args.reweight=True
+    args.sampling_steps=0
+    args.steps=10
+    args.wd1=0.0
+    args.wd2=0.0
 else:
     raise ValueError
 
@@ -172,7 +210,7 @@ diffusion = gd.GaussianDiffusion(mean_type, args.noise_schedule, \
         args.noise_scale, args.noise_min, args.noise_max, args.steps, device).to(device)
 
 ### Build Autoencoder & MLP ###
-model_path = "saved_models/"
+model_path = f"saved_models/{args.dataset}/"
 if args.dataset == "amazon-book_clean":
     model_name = "amazon-book_clean_0.0005lr1_0.0001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.05_dims[300]_emb10_x0_steps5_scale0.5_min0.001_max0.005_sample0_reweight1_log.pth"
     AE_name = "amazon-book_clean_0.0005lr1_0.0001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.05_dims[300]_emb10_x0_steps5_scale0.5_min0.001_max0.005_sample0_reweight1_log_AE.pth"
@@ -197,6 +235,12 @@ elif args.dataset == 'foursquare_tky':
 elif args.dataset == 'ml-1m':
     model_name = 'ml-1m_0.001lr1_0.001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.01_dims[300]_emb10_x0_steps5_scale0.1_min0.0005_max0.01_sample0_reweightTrue_log.pth'
     AE_name = 'ml-1m_0.001lr1_0.001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.01_dims[300]_emb10_x0_steps5_scale0.1_min0.0005_max0.01_sample0_reweightTrue_log_AE.pth'
+elif args.dataset == 'books':
+    model_name = 'books_0.001lr1_0.001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.03_dims[300]_emb10_x0_steps10_scale0.005_min0.005_max0.01_sample0_reweightTrue_log.pth'
+    AE_name = 'books_0.001lr1_0.001lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.03_dims[300]_emb10_x0_steps10_scale0.005_min0.005_max0.01_sample0_reweightTrue_log_AE.pth'
+elif args.dataset == 'lastfm':
+    model_name = 'lastfm_0.01lr1_0.01lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.03_dims[300]_emb10_x0_steps10_scale0.1_min0.005_max0.01_sample0_reweightTrue_log.pth'
+    AE_name = 'lastfm_0.01lr1_0.01lr2_0.0wd1_0.0wd2_bs400_cate2_in[300]_out[]_lam0.03_dims[300]_emb10_x0_steps10_scale0.1_min0.005_max0.01_sample0_reweightTrue_log_AE.pth'
 
 model = torch.load(model_path + model_name, weights_only=False, map_location=device).to(device)
 Autoencoder = torch.load(model_path + AE_name, weights_only=False, map_location=device).to(device)
@@ -302,7 +346,7 @@ if args.n_cate > 1:
 else:
     mask_train = train_data
 
-valid_results, _ = evaluate(test_loader, valid_y_data, train_data, eval(args.topN))
+valid_results, _ = evaluate(test_loader, valid_y_data, mask_train, eval(args.topN))
 if args.tst_w_val:
     test_results, predicted_matrix = evaluate(test_twv_loader, test_y_data, mask_tv, eval(args.topN))
 else:
