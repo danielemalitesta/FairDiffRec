@@ -6,7 +6,7 @@ from sklearn.model_selection import ParameterGrid
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--dataset', type=str, required=True, choices=['ml-1m', 'foursquare_tky'], help='choose the dataset (ml-1m or ftky)')
+parser.add_argument('--dataset', type=str, default='ml-1m', help='choose the dataset')
 parser.add_argument('--data_path', type=str, default='/content/FairDiffRec/datasets', help='load data path')
 
 args = parser.parse_args()
@@ -21,41 +21,22 @@ def betas_from_linear_variance(steps, variance, max_beta=0.999):
     return np.array(betas)
 
 
-grids = {
-    'ml-1m': ParameterGrid({
-        "--lr": [5e-5, 1e-4, 5e-4],
-        "--weight_decay": [1e-3, 1e-2],
-        "--batch_size": [400],
-        "--dims": ['[200,200]'],
-        "--emb_size": [10],
-        "--mean_type": ['x0'],
-        "--steps": [20, 50],
-        "--noise_scale": [0.001],
-        "--noise_min": [0.02],
-        "--noise_max": [0.2],
-        "--sampling_steps": [0],
-        "--reweight": [1],
-        "--lamd1": [0.1],
-        "--lamd2": [0.1]
-    }),
-    
-    'foursquare_tky': ParameterGrid({
-        "--lr": [1e-5, 5e-5, 1e-4],
-        "--weight_decay": [1e-3, 1e-2],
-        "--batch_size": [400],
-        "--dims": ['[1000]', '[2000]'],
-        "--emb_size": [10],
-        "--mean_type": ['x0'],
-        "--steps": [5, 10, 20],
-        "--noise_scale": [0.001],
-        "--noise_min": [0.001],
-        "--noise_max": [0.01],
-        "--sampling_steps": [0],
-        "--reweight": [1],
-        "--lamd1": [0.1],
-        "--lamd2": [0.1]
-    })
-}
+hyperparams = ParameterGrid({
+    "--lr": [5e-5, 1e-4, 5e-4],
+    "--weight_decay": [1e-2],
+    "--batch_size": [400],
+    "--dims": ['[200,200]', '[1000]'],
+    "--emb_size": [10],
+    "--mean_type": ['x0'],
+    "--steps": [10, 20],
+    "--noise_scale": [0.001],
+    "--noise_min": [0.001, 0.02],
+    "--noise_max": [0.2, 0.01],
+    "--sampling_steps": [0],
+    "--reweight": [1],
+    "--lamd1": [0.1],
+    "--lamd2": [0.1]
+})
 
 
 def summary(configuration):
@@ -80,8 +61,6 @@ def main():
         os.makedirs(logs_path + f'/{args.dataset}')
 
     command_lines = set()
-
-    hyperparams = grids[args.dataset]
 
     print(f'Total configurations for this dataset: {len(hyperparams)}')
 
