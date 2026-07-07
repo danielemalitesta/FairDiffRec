@@ -26,7 +26,9 @@ DEFAULT_DATA_PATHS = {
     'amazon': 'datasets/amazon-book_clean',
     'yelp': 'datasets/yelp_clean',
     'ml-1m': '/content/FairDiffRec/datasets/ml-1m',
-    'foursquare_tky': '/content/FairDiffRec/datasets/foursquare_tky'
+    'foursquare_tky': '/content/FairDiffRec/datasets/foursquare_tky',
+    'books': '/content/FairDiffRec/datasets/books',
+    'lastfm': '/content/FairDiffRec/datasets/lastfm'
 }
 
 
