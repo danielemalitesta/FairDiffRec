@@ -75,6 +75,20 @@ elif args.dataset == 'foursquare_tky':
     args.noise_min = 0.001
     args.noise_max = 0.01
     args.n_hops = 2
+elif args.dataset == 'books':
+    args.lr=0.001
+    args.steps = 10
+    args.noise_scale = 0.0001
+    args.noise_min = 0.0001
+    args.noise_max = 0.01
+    args.n_hops = 2
+elif args.dataset == 'lastfm':
+    args.lr=0.001
+    args.steps = 10
+    args.noise_scale = 0.00001
+    args.noise_min = 0.0001
+    args.noise_max = 0.01
+    args.n_hops = 2
 
 else:
     raise ValueError
@@ -128,6 +142,10 @@ elif args.dataset == "ml-1m":
     model_name = "CAM_2hops_ml1m.pth"
 elif args.dataset == "foursquare_tky":
     model_name = "CAM_2hops_ftky.pth"
+elif args.dataset == "books":
+    model_name = "CAM_2hops_books.pth"
+elif args.dataset == "lastfm":
+    model_name = "CAM_2hops_lastfm.pth"
 
 
 def evaluate(data_loader, data_te, mask_his, topN, model, write=False):
