@@ -1,0 +1,4 @@
+eps choice [0.1, 0.2]
+learning_rate choice [1e-4, 2e-4]
+lambda choice [0.05]
+temperature choice [0.1]
