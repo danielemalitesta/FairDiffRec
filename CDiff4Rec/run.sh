@@ -18,8 +18,14 @@ case $dataset_name in
         "foursquare_tky")
         cmd="python -u main.py --cuda --dataset foursquare_tky --alpha 0.9 --r_agg sim --lr 0.0001 --topk 20 --steps 10 --weight_decay 0.0"
         ;;
+        "books")
+        cmd="python -u main.py --cuda --dataset books --alpha 0.9 --r_agg sim --lr 0.0001 --topk 20 --steps 10 --weight_decay 0.0"
+        ;;
+        "lastfm")
+        cmd="python -u main.py --cuda --dataset lastfm --alpha 0.7 --r_agg sim --lr 0.0001 --topk 20 --steps 10 --weight_decay 0.0"
+        ;;
     *)
-        echo "Invalid dataset name! Please provide one of the following dataset names: yelp, amazon_game, citeulike_t, ml-1m, foursquare_tky"
+        echo "Invalid dataset name! Please provide one of the following dataset names: yelp, amazon_game, citeulike_t, ml-1m, foursquare_tky, books, lastfm"
         exit 1
         ;;
 esac
