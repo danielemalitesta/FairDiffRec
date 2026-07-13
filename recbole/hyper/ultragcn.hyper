@@ -1,6 +1,0 @@
-negative_weight choice [10, 15]
-learning_rate choice [1e-4, 2e-4]
-w1 choice [1.0]
-w2 choice [1e-7]
-w3 choice [1.0]
-w4 choice [1e-7]

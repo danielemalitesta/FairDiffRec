@@ -1,4 +1,0 @@
-learning_rate choice [1e-4, 2e-4]
-n_layers choice [2, 3]
-embedding_size choice [64, 128]
-train_batch_size choice [2048]
