@@ -1,0 +1,4 @@
+learning_rate choice [1e-4, 5e-4, 1e-3]
+dropout_prob choice [0.1, 0.3, 0.5]
+hidden_dimension choice [600]
+gamma choice [5e-3]

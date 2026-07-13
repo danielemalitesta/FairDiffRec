@@ -1,0 +1,1 @@
+reg_weight choice [100, 500, 1000, 2000]
