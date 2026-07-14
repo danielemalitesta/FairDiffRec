@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import torch
 import os
+from recbole.data.interaction import Interaction 
 
 _original_load = torch.load
 def _patched_load(*args, **kwargs):
@@ -40,15 +41,17 @@ def get_base_config():
         'topk': [METRIC_K],
         'metrics': ['Recall', 'NDCG'],
         'valid_metric': f'Recall@{METRIC_K}',
-        'epochs': 1000,
+        
         'eval_step': 5,
-        'stopping_step': 20,
+        'stopping_step': 6,
         
         'data_path': '/content/FairDiffRec/datasets/'
     }
 
 def custom_objective_function(config_dict=None, config_file_list=None, saved=True):
     base_config = get_base_config()
+    
+    base_config['epochs'] = 200
     
     if config_dict:
         base_config.update(config_dict)
@@ -81,9 +84,9 @@ def main():
     global GLOBAL_MODEL, GLOBAL_DATASET
     
     parser = argparse.ArgumentParser(description="Master Script: Grid Search + Final Training + TSV Export")
-    parser.add_argument('--model', type=str, required=True, help='Model name (e.g., BPR)')
+    parser.add_argument('--model', type=str, required=True, help='Model name (e.g., NeuMF)')
     parser.add_argument('--dataset', type=str, required=True, help='Dataset name (e.g., lastfm)')
-    parser.add_argument('--params_file', type=str, required=True, help='Path to parameters file (e.g., bpr.hyper)')
+    parser.add_argument('--params_file', type=str, required=True, help='Path to parameters file (e.g., neumf.hyper)')
     parser.add_argument('--output_file', type=str, default='hyper_search_results.txt', help='Output file')
     
     args = parser.parse_args()
@@ -116,6 +119,8 @@ def main():
     final_config_dict = get_base_config()
     final_config_dict.update(hp.best_params)
     
+    final_config_dict['epochs'] = 1000
+    
     config = Config(model=args.model, dataset=args.dataset, config_dict=final_config_dict)
     init_seed(config['seed'], config['reproducibility'])
 
@@ -127,11 +132,14 @@ def main():
     
     best_valid_score, best_valid_result = trainer.fit(train_data, valid_data, show_progress=True, saved=True)
     
+    if hasattr(trainer, 'saved_model_file'):
+        print(f"\n[INFO] Best Model Parameters (.pth) successfully saved to: {trainer.saved_model_file}")
+    
     print(f"\n--- Final Evaluation on Test Set ---")
     test_result = trainer.evaluate(test_data, load_best_model=True)
     print(test_result)
 
-    # TSV FILE GENERATION
+    # RECOMMENDATIONS FILE GENERATION
     print(f"\n{'='*50}\nGENERATING TSV FILE (Top-{EXPORT_K})\n{'='*50}")
     model.eval()
     
@@ -147,7 +155,33 @@ def main():
             interaction = interaction.to(config['device'])
             
             with torch.no_grad():
-                scores = model.full_sort_predict(interaction)
+                try:
+                    scores = model.full_sort_predict(interaction)
+                except NotImplementedError:
+                    scores_list = []
+                    all_items = torch.arange(dataset.item_num, device=config['device'])
+                    
+                    for i in range(len(interaction)):
+                        input_dict = {}
+                        input_dict[uid_field] = interaction[uid_field][i].repeat(dataset.item_num)
+                        input_dict[iid_field] = all_items
+                        
+                        for k, v in interaction.interaction.items():
+                            if k not in [uid_field, iid_field]:
+                                input_dict[k] = v[i].repeat(dataset.item_num)
+                                
+                        input_inter = Interaction(input_dict).to(config['device'])
+                        
+                        user_scores = []
+                        chunk_size = 50000 
+                        for start_idx in range(0, dataset.item_num, chunk_size):
+                            chunk_inter = input_inter[start_idx : start_idx + chunk_size]
+                            chunk_scores = model.predict(chunk_inter)
+                            user_scores.append(chunk_scores)
+                            
+                        scores_list.append(torch.cat(user_scores))
+                        
+                    scores = torch.stack(scores_list)
             
             scores = scores.view(-1, dataset.item_num)
             
@@ -165,7 +199,6 @@ def main():
                 
                 for item_score, internal_item in zip(topk_scores[row_idx], topk_items[row_idx]):
                     internal_item = internal_item.item()
-                    
                     item_token = dataset.field2id_token[iid_field][internal_item]
                     item_id = int(item_token) - 1 
                     
