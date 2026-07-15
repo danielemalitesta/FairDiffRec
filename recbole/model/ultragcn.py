@@ -13,7 +13,7 @@ class UltraGCN(GeneralRecommender):
     def __init__(self, config, dataset):
         super(UltraGCN, self).__init__(config, dataset)
 
-        self.embedding_size = config['embedding_size'] if 'embedding_size' in config else 64
+        self.embedding_size = config['embedding_size'] if 'embedding_size' in config else 128
         self.negative_weight = config['negative_weight'] if 'negative_weight' in config else 15.0
         self.w1 = config['w1'] if 'w1' in config else 1.0
         self.w2 = config['w2'] if 'w2' in config else 1.0
