@@ -27,5 +27,7 @@ def convert_to_recbole_format(dataset_name, data_dir):
     print(f"Conversion of {dataset_name} completed!\n")
 
 if __name__ == '__main__':
+    convert_to_recbole_format(dataset_name='ml-1m', data_dir='/content/FairDiffRec/datasets/ml-1m')
+    convert_to_recbole_format(dataset_name='foursquare_tky', data_dir='/content/FairDiffRec/datasets/foursquare_tky')
     convert_to_recbole_format(dataset_name='books', data_dir='/content/FairDiffRec/datasets/books')
     convert_to_recbole_format(dataset_name='lastfm', data_dir='/content/FairDiffRec/datasets/lastfm')
