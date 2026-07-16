@@ -14,8 +14,7 @@ torch.load = _patched_load
 from recbole.trainer import HyperTuning
 from recbole.config import Config
 from recbole.data import create_dataset, data_preparation
-from recbole.utils import init_seed, get_model
-from recbole.trainer import Trainer
+from recbole.utils import init_seed, get_model, get_trainer
 
 GLOBAL_MODEL = ""
 GLOBAL_DATASET = ""
@@ -63,7 +62,10 @@ def custom_objective_function(config_dict=None, config_file_list=None, saved=Tru
     train_data, valid_data, test_data = data_preparation(config, dataset)
     model_class = get_model(config['model'])
     model = model_class(config, train_data.dataset).to(config['device'])
-    trainer = Trainer(config, model)
+    model_class = get_model(config['model'])
+    model = model_class(config, train_data.dataset).to(config['device'])
+    trainer_class = get_trainer(config['MODEL_TYPE'], config['model'])
+    trainer = trainer_class(config, model)
 
     best_valid_score, best_valid_result = trainer.fit(train_data, valid_data, verbose=False, saved=True)
     
@@ -128,7 +130,10 @@ def main():
     train_data, valid_data, test_data = data_preparation(config, dataset)
     model_class = get_model(config['model'])
     model = model_class(config, train_data.dataset).to(config['device'])
-    trainer = Trainer(config, model)
+    model_class = get_model(config['model'])
+    model = model_class(config, train_data.dataset).to(config['device'])
+    trainer_class = get_trainer(config['MODEL_TYPE'], config['model'])
+    trainer = trainer_class(config, model)
     
     best_valid_score, best_valid_result = trainer.fit(train_data, valid_data, show_progress=True, saved=True)
     
