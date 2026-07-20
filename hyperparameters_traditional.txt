@@ -1,0 +1,115 @@
+BPRMF ML-1M
+embedding_size: 128, learning_rate: 0.0002, train_batch_size: 2048
+
+BPRMF FTKY
+embedding_size: 128, learning_rate: 0.0002, train_batch_size: 2048
+
+BPRMF BOOKS
+embedding_size: 128, learning_rate: 0.0001, train_batch_size: 1024
+
+BPRMF LASTFM
+embedding_size: 128, learning_rate: 0.0001, train_batch_size: 2048
+
+
+ItemKNN ML-1M
+k: 400, shrink: 2
+
+ItemKNN FTKY
+k: 200, shrink: 0
+
+ItemKNN BOOKS
+k: 100, shrink: 2.0
+
+ItemKNN LASTFM
+k: 200, shrink: 0.0
+
+
+NeuMF ML-1M
+dropout_prob: 0.3, learning_rate: 0.0002, mf_embedding_size: 64, mlp_hidden_size: [128,64], train_batch_size: 2048
+
+NeuMF FTKY
+dropout_prob: 0.3, learning_rate: 0.0002, mf_embedding_size: 128, mlp_hidden_size: [128,64], train_batch_size: 2048
+
+NeuMF BOOKS
+dropout_prob: 0.1, learning_rate: 0.0001, mf_embedding_size: 128, mlp_hidden_size: [128,64], train_batch_size: 1024
+
+NeuMF LASTFM
+dropout_prob: 0.3, learning_rate: 0.0001, mf_embedding_size: 128, mlp_hidden_size: [128,64], train_batch_size: 2048
+
+
+LightGCN ML-1M
+learning_rate: 0.0002, embedding_size: 64, n_layers: 2, train_batch_size: 2048
+
+LightGCN FTKY
+learning_rate: 0.0002, embedding_size: 64, n_layers: 2, train_batch_size: 2048
+
+LightGCN BOOKS
+learning_rate: 0.001, embedding_size: 128, n_layers: 2, train_batch_size: 2048
+
+LightGCN LASTFM
+learning_rate: 0.001, embedding_size: 128, n_layers: 3, train_batch_size: 2048
+
+
+UltraGCN ML-1M
+ILoss_lambda: 1e-7, learning_rate: 2e-4, negative_weight: 10, w1: 1.0, w2: 1e-7, w3: 1.0, w4: 1e-7
+
+UltraGCN FTKY
+ILoss_lambda: 1e-7, learning_rate: 2e-4, negative_weight: 10, w1: 1.0, w2: 1e-7, w3: 1.0, w4: 1e-7
+
+UltraGCN BOOKS
+ILoss_lambda: 1e-4, learning_rate: 5e-4, negative_weight: 5, w1: 1.0, w2: 1.0, w3: 1.0, w4: 1.0
+
+UltraGCN LASTFM
+ILoss_lambda: 1e-4, learning_rate: 5e-4, negative_weight: 10, w1: 1.0, w2: 1.0, w3: 1.0, w4: 1.0
+
+
+XSimGCL ML-1M
+eps: 0.2, lambda: 0.05, learning_rate: 2e-4, temperature: 0.1
+
+XSimGCL FTKY
+eps: 0.2, lambda: 0.05, learning_rate: 2e-4, temperature: 0.1
+
+XSimGCL BOOKS
+eps: 0.2, lambda: 0.05, learning_rate: 5e-4, temperature: 0.1
+
+XSimGCL LASTFM
+eps: 0.2, lambda: 0.05, learning_rate: 1e-4, temperature: 0.1
+
+
+EASE ML-1M
+reg_weight: 2000
+
+EASE FTKY
+reg_weight: 100
+
+EASE BOOKS
+reg_weight: 100
+
+EASE LASTFM
+reg_weight: 1000
+
+
+MultiVAE ML-1M
+dropout_prob: 0.3, mlp_hidden_size: [600], learning_rate: 2e-4, latent_dimension: 200
+
+MultiVAE FTKY
+dropout_prob: 0.5, mlp_hidden_size: [600], learning_rate: 2e-4, latent_dimension: 200
+
+MultiVAE BOOKS
+dropout_prob: 0.5, mlp_hidden_size: [600], learning_rate: 1e-3, latent_dimension: 200
+
+MultiVAE LASTFM
+dropout_prob: 0.3, mlp_hidden_size: [600], learning_rate: 1e-3, latent_dimension: 200
+
+
+RecVAE ML-1M
+dropout_prob: 0.1, hidden_dimension: 600, gamma: 5e-3, learning_rate: 2e-4
+
+RecVAE FTKY
+dropout_prob: 0.5, hidden_dimension: 600, gamma: 5e-3, learning_rate: 2e-4
+
+RecVAE BOOKS
+dropout_prob: 0.5, hidden_dimension: 600, gamma: 5e-3, learning_rate: 1e-3
+
+RecVAE LASTFM
+dropout_prob: 0.5, hidden_dimension: 600, gamma: 5e-3, learning_rate: 5e-4

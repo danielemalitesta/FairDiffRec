@@ -1,0 +1,114 @@
+DIFFREC ML-1M
+batch_size=400, dims=[200,600], lr=0.0001, noise_max=0.01, noise_min=0.0005, noise_scale=0.005, reweight=False, steps=5, weight_decay=0.0
+
+DIFFREC FOURSQUARE_TKY
+batch_size=400, dims=[1000], lr=0.0001, noise_max=0.01, noise_min=0.001, noise_scale=0.005, reweight=False, steps=40, weight_decay=0.0
+
+DIFFREC BOOKS
+batch_size=400, dims=[1000], lr=0.0001, noise_max=0.01, noise_min=0.001, noise_scale=0.005, reweight=True, steps=5, weight_decay=0.0
+
+DIFFREC LASTFM
+batch_size=400, dims=[200,600], lr=0.0001, noise_max=0.005, noise_min=0.001, noise_scale=0.005, reweight=True, steps=10, weight_decay=0.0
+
+
+L-DIFFREC ML-1M
+batch_size=400, in_dims=[300], lamda=0.01, lr1=0.001, lr2=0.001, mlp_dims=[300], steps=5, n_cate=2, noise_max=0.01, noise_min=0.0005, noise_scale=0.1
+
+L-DIFFREC FOURSQUARE_TKY
+batch_size=400, in_dims=[300], lamda=0.03, lr1=0.001, lr2=0.001, mlp_dims=[300], steps=2, n_cate=2, noise_max=0.005, noise_min=0.001, noise_scale=0.1
+
+L-DIFFREC BOOKS
+batch_size=400, in_dims=[300], lamda=0.03, lr1=0.001, lr2=0.001, mlp_dims=[300], steps=10, n_cate=2, noise_max=0.01, noise_min=0.005, noise_scale=0.005
+
+L-DIFFREC LASTFM
+batch_size=400, in_dims=[300], lamda=0.03, lr1=0.01, lr2=0.01, mlp_dims=[300], steps=10, n_cate=2, noise_max=0.01, noise_min=0.005, noise_scale=0.1
+
+
+CDIFF4REC ML-1M
+alpha=0.5, lr=0.0001, r_agg=avg, steps=10, topk=20, weight_decay=0.0
+
+CDIFF4REC FOURSQUARE_TKY
+alpha=0.9, lr=0.0001, r_agg=sim, steps=10, topk=20, weight_decay=0.0
+
+CDIFF4REC BOOKS
+alpha=0.9, lr=0.0001, r_agg=sim, steps=10, topk=20, weight_decay=0.0
+
+CDIFF4REC LASTFM
+alpha=0.7, lr=0.0001, r_agg=sim, steps=10, topk=20, weight_decay=0.0
+
+
+GIFFCF ML-1M
+ideal_weight=0, learning_rates=[0.001, 0.001], noise_decay=0.5
+
+GIFFCF FOURSQUARE_TKY
+ideal_weight=0.3, learning_rates=[0.001, 0.001], noise_decay=0.5
+
+GIFFCF BOOKS
+ideal_weight=0, learning_rates=[0.001, 0.001], noise_decay=0.5
+
+GIFFCF LASTFM
+ideal_weight=0.3, learning_rates=[0.001, 0.001], noise_decay=1
+
+
+CONDIFF ML-1M
+dims=[200,200], lamd1=0.1, lamd2=0.1, lr=0.0005, noise_max=0.2, noise_min=0.02, noise_scale=0.001, steps=20, weight_decay=0.01
+
+CONDIFF FOURSQUARE_TKY
+dims=[1000], lamd1=0.1, lamd2=0.1, lr=5e-05, noise_max=0.01, noise_min=0.001, noise_scale=0.001, steps=20, weight_decay=0.01
+
+CONDIFF BOOKS
+dims=[1000], lamd1=0.1, lamd2=0.1, lr=5e-05, noise_max=0.2, noise_min=0.001, noise_scale=0.001, steps=20, weight_decay=0.01
+
+CONDIFF LASTFM
+dims=[200,200], lamd1=0.1, lamd2=0.1, lr=0.0005, noise_max=0.01, noise_min=0.001, noise_scale=0.001, steps=10, weight_decay=0.01
+
+
+CODIGEM ML-1M
+M=1000, T=3, beta=0.0001, lr=1e-3
+
+CODIGEM FOURSQUARE_TKY
+M=1000, T=5, beta=0.0001, lr=1e-3
+
+CODIGEM BOOKS
+M=1000, T=3, beta=0.0001, lr=1e-3
+
+CODIGEM LASTFM
+M=200, T=3, beta=0.0001, lr=1e-3
+
+
+CF-DIFF ML-1M
+lr=0.0001, noise_max=0.01, noise_min=0.001, noise_scale=0.001, steps=20
+
+CF-DIFF FOURSQUARE_TKY
+lr=0.0001, noise_max=0.01, noise_min=0.001, noise_scale=0.001, steps=20
+
+CF-DIFF BOOKS
+lr=0.001, noise_max=0.01, noise_min=0.0001, noise_scale=0.0001, steps=10
+
+CF-DIFF LASTFM
+lr=0.001, noise_max=0.01, noise_min=0.0001, noise_scale=0.00001, steps=10
+
+
+BSPM-LM ML-1M
+T_s=2.25, final_sharpening=False, idl_beta=0.15, simple_model=bspm, solver_shr=rk4
+
+BSPM-EM ML-1M
+T_s=2.25, final_sharpening=True, idl_beta=0.15, simple_model=bspm, solver_shr=rk4
+
+BSPM-LM FOURSQUARE_TKY
+T_s=1, final_sharpening=False, idl_beta=0.15, simple_model=bspm, solver_shr=rk4
+
+BSPM-EM FOURSQUARE_TKY
+T_s=2.25, final_sharpening=True, idl_beta=0.15, simple_model=bspm, solver_shr=rk4
+
+BSPM-LM BOOKS
+T_s=2.25, final_sharpening=False, idl_beta=0.15, simple_model=bspm, solver_shr=rk4
+
+BSPM-EM BOOKS
+T_s=2.5, final_sharpening=True, idl_beta=0.15, simple_model=bspm, solver_shr=rk4
+
+BSPM-LM LASTFM
+T_s=2, final_sharpening=False, idl_beta=0.0, simple_model=bspm, solver_shr=rk4
+
+BSPM-EM LASTFM
+T_s=2, final_sharpening=True, idl_beta=0.0, simple_model=bspm, solver_shr=rk4
