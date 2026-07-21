@@ -18,7 +18,7 @@ Each model lives in its own top-level folder with its own `main.py`, `data_utils
 | `GiffCF/` | GiffCF | Graph-signal diffusion recommender, configured via TOML files in `configs/` (one per dataset) |
 | `BSPM/` | BSPM | Blurring-Sharpening Process Model, a score/heat-diffusion based graph recommender (uses its own `world.py`/`register.py` runtime) |
 
-Each model implementation was cloned directy from the authors' github repository.
+Each model implementation was cloned directy from the authors' github repositories.
 
 ### Baselines
 `recbole/` wraps traditional and graph-based recommenders (BPR, ItemKNN, NeuMF, LightGCN, UltraGCN, XSimGCL, EASE, MultiVAE, RecVAE) through the [RecBole](https://github.com/RUCAIBox/RecBole) library, with per-model hyper-parameter search spaces in `recbole/hyper/` and a `convert_to_recbole.py` script to turn the project's `.npy` interaction files into RecBole's `.inter` format.
